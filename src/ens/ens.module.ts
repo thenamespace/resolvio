@@ -1,5 +1,5 @@
 import { Module } from "@nestjs/common";
-import { ENSService } from "./ens.service";
+import { ENSService } from "./ens.resolver";
 
 @Module({
     exports: [ENSService],

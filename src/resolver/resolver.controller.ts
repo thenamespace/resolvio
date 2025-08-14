@@ -1,22 +1,26 @@
-import { Controller, Get } from "@nestjs/common";
+import { Controller, Get, Param, Query } from "@nestjs/common";
 import { ResolverService } from "./resolver.service";
+import { ResolveNameRequest } from "./types/resolve-name.request";
+import { ResolveAddressRequest } from "./types/resolve-address.request";
 
-@Controller("/api/v1/resolver")
+@Controller("/api/v1/resolve")
 export class ResolverController {
 
     constructor(private readonly resolverService: ResolverService) {}
 
     @Get("/name/:name")
-    public async resolve() {}
+    public async resolve(@Param("name") name: string, @Query() request: ResolveNameRequest) {
+        return this.resolverService.resolve(name, request)
+    }
 
     @Get("/name/:name/addresses")
-    public async resolveAddresses() {
-
+    public async resolveAddresses(@Param("name") name: string, @Query() request: ResolveAddressRequest) {
+        return this.resolverService.resolveAddress(name, request);
     }
 
     @Get("/name/:name/texts")
-    public async resolveTexts() {
-
+    public async resolveTexts(@Query("name") name: string, @Query() request: any) {
+        return this.resolverService.resolveAddresses(name, request)
     }
 
     @Get("/name/:name/texts/:textKey")
@@ -41,6 +45,6 @@ export class ResolverController {
 
     @Get("/name/:name/metadata")
     public async getMetadata() {
-        
+
     }
 }
