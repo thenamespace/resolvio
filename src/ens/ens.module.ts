@@ -1,8 +1,11 @@
 import { Module } from "@nestjs/common";
-import { ENSService } from "./ens.resolver";
+import { EnsResolver } from "./ens.resolver";
+import { InMemoryEnsCache } from "./in-memory-ens.cache";
+import { EnsResolveController } from "./ens.controller";
 
 @Module({
-    exports: [ENSService],
-    providers: [ENSService]
+    exports: [EnsResolver],
+    providers: [EnsResolver, InMemoryEnsCache],
+    controllers: [EnsResolveController]
 })
 export class ENSModule {}
