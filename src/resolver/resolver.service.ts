@@ -5,7 +5,6 @@ import { ResolveAddressRequest } from "./types/resolve-address.request";
 export interface IResolverService {
     resolve(name: string, resolveRequest: ResolveNameRequest) 
     resolveAddress(name: string, resolveRequest: ResolveAddressRequest)
-    resolveAddresses(name: string, resolveRequest: ResolveAddressRequest)
 }
 
 @Injectable()
@@ -21,6 +20,4 @@ export class ResolverService implements IResolverService {
     public async resolve(name: string, resolveRequest: ResolveNameRequest) {
         
     }
-
-
 }
