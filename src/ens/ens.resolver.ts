@@ -1,14 +1,14 @@
-import { Injectable, OnModuleInit } from "@nestjs/common";
+import { Injectable } from "@nestjs/common";
 import { IResolverService } from "../resolver";
 import { ResolveAddressRequest } from "src/resolver/types/resolve-address.request";
 import { ResolveNameRequest } from "src/resolver/types/resolve-name.request";
-import { createPublicClient, http, PublicClient } from "viem";
+import { http } from "viem";
 import { mainnet, sepolia } from "viem/chains";
-import { createEnsPublicClient, EnsPublicClient } from "@ensdomains/ensjs";
+import { createEnsPublicClient } from "@ensdomains/ensjs";
 import { InMemoryEnsCache } from "./in-memory-ens.cache";
 import { EnsCache } from "./interface/ens.cache";
 import { ARBITRUM_COIN, AVATAR_TEXT, BASE_COIN, BTC_COIN, DESCRIPTION_TEXT, DISCORD_TEXT, EMAIL_TEXT, ETH_COIN, GITHUB_TEXT, HEADER_TEXT, NAME_TEXT, OP_COIN, SOL_COIN, TELEGRAM_TEXT, TWITTER_TEXT, URL_TEXT } from "./ens.utils";
-import { EnsAddressRecord, EnsTextRecord } from "./ens.types";
+import { EnsAddressRecord, EnsProfile, EnsTextRecord } from "./ens.types";
 import { EnsAddressesResponse, EnsTextsResponse } from "./dto/response.dto";
 
 // Default addresses to resolve 
@@ -61,7 +61,42 @@ export class EnsResolver implements IResolverService {
     resolveAddress(name: string, resolveRequest: ResolveAddressRequest) {
         throw new Error("Method not implemented.");
     }
-    
+
+    public async resolveProfile(name: string, noCache: boolean = false): Promise<EnsProfile> {
+
+        const cacheData = this.ensCache.getProfile(name);
+
+        if (cacheData && !noCache) {
+            return cacheData;
+        }
+
+        const result = await this.ensClient.getRecords({
+            coins: DefaultCoins,
+            texts: DefaultTexts,
+            contentHash: true,
+            name: name
+        })
+
+        let contenthash
+
+        if (result.contentHash) {
+            contenthash = `${result.contentHash.protocolType}://${result.contentHash.decoded}`
+        }
+
+        const profile: EnsProfile = {
+            name: name,
+            addresses: (result && result.coins && result.coins.length) ? result.coins.map(coin => {
+                return { address: coin.value, coin: coin.id, name: coin.name}
+            }) : [],
+            texts: (result && result.texts) ? result.texts : [],
+            contenthash: contenthash,
+            resolver: result.resolverAddress
+        }
+
+        this.ensCache.setProfile(name, profile);
+        return profile;
+    }
+
     public async resolveTexts(name: string, keys: string[] = [], noCache: boolean = false): Promise<EnsTextsResponse> {
 
         const textsKeys = (keys && keys.length > 0) ? keys : DefaultTexts;
@@ -86,7 +121,7 @@ export class EnsResolver implements IResolverService {
             })
         })
         this.ensCache.setTexts(name, textsKeys, texts);
-        
+
         return {
             texts: texts,
             name: name

@@ -1,11 +1,12 @@
 import { AddressRecord, TextRecord } from "src/types/ens-utils.dto";
 import { Address } from "viem";
 
-export class EnsFullProfile {
+export class EnsProfile {
     name: string
     texts?: TextRecord[]
     addresses?: AddressRecord[]
     contenthash?: string
+    resolver: string
 }
 
 export class EnsTextRecord {

@@ -1,6 +1,6 @@
 import { Controller, Get, Param, Query } from "@nestjs/common";
 import { EnsResolver } from "./ens.resolver";
-import { EnsAddressesRequest, EnsNameRequest, EnsTextsRequest } from "./dto/requests.dto";
+import { EnsAddressesRequest, EnsNameRequest, EnsTextsRequest, NoCache } from "./dto/requests.dto";
 
 @Controller("/api/v1/resolve/ens")
 export class EnsResolveController {
@@ -8,8 +8,8 @@ export class EnsResolveController {
     constructor(private readonly ensResolver: EnsResolver) { }
 
     @Get("/name/:name/profile")
-    public async getEnsProfile(@Param() name: EnsNameRequest, @Query() addressRequest: EnsAddressesRequest) {
-        return this.ensResolver.resolveAddresses(name.name, addressRequest.coins, addressRequest.noCache);
+    public async getEnsProfile(@Param() name: EnsNameRequest, @Query() cache: NoCache) {
+        return this.ensResolver.resolveProfile(name.name, cache.noCache);
     }
 
     @Get("/name/:name/addresses")

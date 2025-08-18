@@ -15,14 +15,16 @@ export class EnsNameRequest {
     name: string
 }
 
-export class EnsAddressesRequest {
-    coins?: number[]
+export class NoCache {
     noCache?: boolean
 }
 
-export class EnsTextsRequest {
+export class EnsAddressesRequest extends NoCache {
+    coins?: number[]
+}
+
+export class EnsTextsRequest extends NoCache {
     keys?: string[]
-    noCache?: boolean
 }
 
 export class EnsProfileRequest {

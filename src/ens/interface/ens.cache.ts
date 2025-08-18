@@ -1,4 +1,4 @@
-import { EnsAddressRecord, EnsTextRecord } from "../ens.types";
+import { EnsAddressRecord, EnsProfile, EnsTextRecord } from "../ens.types";
 
 export interface EnsCache {
    getAddresses(name: string, coins: number[]): EnsAddressRecord[] | null;
@@ -7,4 +7,6 @@ export interface EnsCache {
    setAddresses(name: string, coins: number[], data: EnsAddressRecord[]);
    setTexts(name: string, keys: string[], data: EnsTextRecord[]);
    setContenthash(name: string, contenthash);
+   setProfile(name: string, profile: EnsProfile)
+   getProfile(name: string);
 }
