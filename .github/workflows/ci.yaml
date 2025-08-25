@@ -1,0 +1,24 @@
+---
+name: Build And Publish Docker Image
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build-and-push:
+    uses: thenamespace/.github-private/.github/workflows/gcp-oidc-docker-build-push-custom-app.yaml@main
+    permissions:
+      contents: read
+      id-token: write
+    with:
+      project_id: prod-9427
+      region: europe-west3
+      workload_identity_provider: projects/397196751430/locations/global/workloadIdentityPools/github-pool/providers/github-provider
+      app_name:  global-resolver
+      dockerfile: ./Dockerfile
+  update-staging:
+    needs: build-and-push
+    uses: thenamespace/.github-private/.github/workflows/repository-dispatch-custom-app.yaml@main
+    secrets: inherit
+    with:
+      app_name:  global-resolver
