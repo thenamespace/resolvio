@@ -9,7 +9,7 @@ export class AddressRecord {
 }
 
 export enum EnsNameType {
-    Classic = "mainnet",
+    Classic = "classic",
     CCIP = "ccip",
     NAMESPACE_CCIP_BASE = "namespace-base",
     NAMESPACE_CCIP_OP = "namespace-op",

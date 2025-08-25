@@ -1,6 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { IResolverService } from "../resolver";
-import { http } from "viem";
+import { createPublicClient, http } from "viem";
 import { mainnet, sepolia } from "viem/chains";
 import { createEnsPublicClient } from "@ensdomains/ensjs";
 import { InMemoryEnsCache } from "./in-memory-ens.cache";
@@ -40,7 +40,8 @@ const DefaultTexts: string[] = [
 export class EnsResolver implements IResolverService {
 
     private ensClient: ReturnType<typeof createEnsPublicClient>;
-    private ensCache: EnsCache
+    private ensCache: EnsCache 
+    private web3Client: ReturnType<typeof createPublicClient>;
 
     constructor(private readonly _ensCache: InMemoryEnsCache) {
         const rpc = process.env.RPC_URL;
@@ -50,6 +51,7 @@ export class EnsResolver implements IResolverService {
             transport: http(rpc),
             chain: rpcChain,
         })
+
         this.ensCache = this._ensCache;
     }
 
@@ -180,5 +182,23 @@ export class EnsResolver implements IResolverService {
         }
     }
 
+    public async getNameMetadata() {
 
+    }
+
+    private async getNameOwnership() {
+
+    }
+
+    private async getExpiry() {
+
+    }
+
+    private async getL2Ownership(name: string, chainId: number) {
+
+    }
+
+    private async isNamespaceL2Subname(name: string, resolver: string) {
+
+    }
 }
