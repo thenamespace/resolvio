@@ -1,6 +1,7 @@
 import { Injectable } from "@nestjs/common";
-import { EnsCache } from "./interface/ens.cache";
+import { CacheType, EnsCache } from "./interface/ens.cache";
 import { EnsAddressRecord, EnsProfile, EnsTextRecord } from "./ens.types";
+import { namehash } from "viem";
 
 type CacheWrapper<T> = {
     data: T
@@ -10,9 +11,9 @@ type CacheWrapper<T> = {
 @Injectable()
 export class InMemoryEnsCache implements EnsCache {
 
-    // use 30 minutes cache expiry
+    // use 5 minutes cache expiry
     // TODO: move this to env
-    static CACHE_EXPIRATION = 30 * 60 * 1000;
+    static CACHE_EXPIRATION = 5 * 60 * 1000;
 
     private addressesCache: Record<string, CacheWrapper<EnsAddressRecord[]>> = {}
     private textsCache: Record<string, CacheWrapper<EnsTextRecord[]>> = {}
@@ -74,8 +75,48 @@ export class InMemoryEnsCache implements EnsCache {
         }
     }
 
+    public clearCacheForName(name: string, types: CacheType[]) {
+
+        for (const cacheType of types) {
+
+            if (cacheType === CacheType.ALL || cacheType === CacheType.ADDRESS) {
+                this.clearAddressCache(name)
+            } 
+
+            if (cacheType === CacheType.ALL || cacheType === CacheType.TEXT) {
+                this.clearTextCache(name);
+            }
+
+            if (cacheType === CacheType.CONTENTHASH || cacheType === CacheType.ALL) {
+                this.clearContenthashCache(name);
+            }
+        }
+    }
+
+    private clearAddressCache(name: string) {
+        const hash = namehash(name);
+        for (const key of Object.keys(this.addressesCache)) {
+            if (key.startsWith(hash)) {
+                delete this.addressesCache[key]
+            }
+        }
+    }
+
+    private clearTextCache(name: string) {
+          const hash = namehash(name);
+        for (const key of Object.keys(this.textsCache)) {
+            if (key.startsWith(hash)) {
+                delete this.addressesCache[key]
+            }
+        }
+    }
+
+    private clearContenthashCache(name: string) {
+        delete this.contentCache[name];
+    }
+
     private addrCacheKey(name: string, coins: number[]): string {
-        let base_key = name;
+        let base_key = namehash(name) + "-";
         coins.forEach(coin => {
             base_key += `${coin}`
         })
@@ -83,7 +124,7 @@ export class InMemoryEnsCache implements EnsCache {
     }
 
     private textCacheKey(name: string, keys: string[]): string {
-        let base_key = name;
+        let base_key = namehash(name) + "-";
         keys.forEach(key => {
             base_key += key;
         })

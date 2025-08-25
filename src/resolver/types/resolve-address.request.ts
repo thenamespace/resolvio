@@ -1,4 +1,4 @@
 export class ResolveAddressRequest {
-    chainId: number
+    coin: number
     name: string
 }

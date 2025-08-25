@@ -1,15 +1,14 @@
 import { Injectable } from "@nestjs/common";
 import { IResolverService } from "../resolver";
-import { ResolveAddressRequest } from "src/resolver/types/resolve-address.request";
-import { ResolveNameRequest } from "src/resolver/types/resolve-name.request";
-import { http } from "viem";
+import { createPublicClient, http } from "viem";
 import { mainnet, sepolia } from "viem/chains";
 import { createEnsPublicClient } from "@ensdomains/ensjs";
 import { InMemoryEnsCache } from "./in-memory-ens.cache";
-import { EnsCache } from "./interface/ens.cache";
+import { CacheType, EnsCache } from "./interface/ens.cache";
 import { ARBITRUM_COIN, AVATAR_TEXT, BASE_COIN, BTC_COIN, DESCRIPTION_TEXT, DISCORD_TEXT, EMAIL_TEXT, ETH_COIN, GITHUB_TEXT, HEADER_TEXT, NAME_TEXT, OP_COIN, SOL_COIN, TELEGRAM_TEXT, TWITTER_TEXT, URL_TEXT } from "./ens.utils";
 import { EnsAddressRecord, EnsProfile, EnsTextRecord } from "./ens.types";
 import { EnsAddressesResponse, EnsTextsResponse } from "./dto/response.dto";
+import { ResolveNameRequest } from "src/resolver/types/resolve-name";
 
 // Default addresses to resolve 
 // if the addresses parameter is not provided
@@ -41,7 +40,8 @@ const DefaultTexts: string[] = [
 export class EnsResolver implements IResolverService {
 
     private ensClient: ReturnType<typeof createEnsPublicClient>;
-    private ensCache: EnsCache
+    private ensCache: EnsCache 
+    private web3Client: ReturnType<typeof createPublicClient>;
 
     constructor(private readonly _ensCache: InMemoryEnsCache) {
         const rpc = process.env.RPC_URL;
@@ -51,15 +51,34 @@ export class EnsResolver implements IResolverService {
             transport: http(rpc),
             chain: rpcChain,
         })
+
         this.ensCache = this._ensCache;
     }
 
-    resolve(name: string, resolveRequest: ResolveNameRequest) {
+    public async clearCache(name: string, type: CacheType) {
+        this.ensCache.clearCacheForName(name, [type]);
+    }
+
+    public async resolve(name: string, resolveRequest: ResolveNameRequest) {
+        const cachedAddresses = this.ensCache.getAddresses(name, [resolveRequest.chainId || ETH_COIN]);
+
+        if (cachedAddresses) {
+
+        }
+
+
         throw new Error("Method not implemented.");
     }
 
-    resolveAddress(name: string, resolveRequest: ResolveAddressRequest) {
-        throw new Error("Method not implemented.");
+    public async resolveAddress(name: string, coin: number): Promise<string> {
+        
+        return "";
+    }
+
+    public async resolveContenthash(name: string) {
+        
+        const cachedValue = this.ensCache.getContenthash(name);
+        return cachedValue;
     }
 
     public async resolveProfile(name: string, noCache: boolean = false): Promise<EnsProfile> {
@@ -95,6 +114,10 @@ export class EnsResolver implements IResolverService {
 
         this.ensCache.setProfile(name, profile);
         return profile;
+    }
+
+    public async resolveText(name: string, key: string): Promise<string> {
+        return "";
     }
 
     public async resolveTexts(name: string, keys: string[] = [], noCache: boolean = false): Promise<EnsTextsResponse> {
@@ -159,5 +182,23 @@ export class EnsResolver implements IResolverService {
         }
     }
 
+    public async getNameMetadata() {
 
+    }
+
+    private async getNameOwnership() {
+
+    }
+
+    private async getExpiry() {
+
+    }
+
+    private async getL2Ownership(name: string, chainId: number) {
+
+    }
+
+    private async isNamespaceL2Subname(name: string, resolver: string) {
+
+    }
 }
