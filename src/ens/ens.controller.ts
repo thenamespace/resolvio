@@ -1,11 +1,12 @@
-import { Controller, Get, Param, Query } from "@nestjs/common";
+import { Controller, Delete, Get, Param, Query } from "@nestjs/common";
 import { EnsResolver } from "./ens.resolver";
 import { EnsAddressesRequest, EnsNameRequest, EnsTextsRequest, NoCache } from "./dto/requests.dto";
+import { CacheType } from "./interface/ens.cache";
 
 @Controller("/api/v1/resolve/ens")
 export class EnsResolveController {
 
-    constructor(private readonly ensResolver: EnsResolver) { }
+    constructor(private readonly ensResolver: EnsResolver) {}
 
     @Get("/name/:name/profile")
     public async getEnsProfile(@Param() name: EnsNameRequest, @Query() cache: NoCache) {
@@ -23,7 +24,12 @@ export class EnsResolveController {
     }
 
     @Get("/name/:name/contenthash")
-    public async getEnsContenthash() {
+    public async getEnsContenthash(@Param() name: EnsNameRequest) {
+        return this.ensResolver.resolveContenthash(name.name);
+    }
 
+    @Delete("/name/:name/cache")
+    public async clearCache(@Param() name: EnsNameRequest) {
+        return this.ensResolver.clearCache(name.name, CacheType.ALL);
     }
 }

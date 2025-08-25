@@ -1,5 +1,5 @@
 import { Transform } from "class-transformer"
-import { IsString, Length } from "class-validator"
+import { IsBoolean, IsOptional, IsString, Length } from "class-validator"
 
 export class EnsNameRequest {
 
@@ -16,6 +16,8 @@ export class EnsNameRequest {
 }
 
 export class NoCache {
+    @IsOptional()
+    @Transform(({ value }) => value && value === "true" )
     noCache?: boolean
 }
 
