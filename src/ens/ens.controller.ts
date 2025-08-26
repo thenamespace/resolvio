@@ -4,7 +4,9 @@ import { EnsAddressesRequest, EnsNameRequest, EnsTextsRequest, NoCache } from ".
 import { CacheType } from "./interface/ens.cache";
 import { EnsMetadata } from "./ens.types";
 import { ENS_ENDPOINTS } from "../docs/ens.endpoints";
+import { ApiTags } from "@nestjs/swagger";
 
+@ApiTags("ENS")
 @Controller("/api/v1/resolve/ens")
 export class EnsResolveController {
 

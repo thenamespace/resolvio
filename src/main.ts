@@ -10,6 +10,7 @@ async function bootstrap() {
   app.useGlobalPipes(new ValidationPipe({
     transform: true,            // enables class-transformer on @Query DTOs
     whitelist: true,            // strip unknown params
+    transformOptions: { enableImplicitConversion: true },
   }))
 
   // Swagger configuration

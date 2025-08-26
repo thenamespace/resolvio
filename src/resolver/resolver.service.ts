@@ -1,9 +1,7 @@
 import { Injectable, NotImplementedException } from "@nestjs/common";
 import { ResolveNameRequest, ResolveNameResponse } from "./types/resolve-name";
-import { ResolveAddressRequest } from "./types/resolve-address.request";
 import { EnsResolver } from "src/ens/ens.resolver";
 import { NameProtocol } from "./types/protocol";
-import { ETH_COIN } from "src/ens/ens.utils";
 
 export interface IResolverService {
     resolve(name: string, resolveRequest: ResolveNameRequest)
@@ -18,6 +16,9 @@ export class ResolverService implements IResolverService {
 
         const nameProtocol = resolveRequest.protocol || NameProtocol.ENS;
 
+        // currently we support only ENS
+        // but we will support other protocols in the future
+        // [.sol, .sui, etc ]
         if (nameProtocol === NameProtocol.ENS) {
             return this.resolveENS(name, resolveRequest);
         } else {
@@ -26,30 +27,6 @@ export class ResolverService implements IResolverService {
     }
 
     private async resolveENS(name: string, resolveRequest: ResolveNameRequest): Promise<ResolveNameResponse> {
-
-        let promises: Promise<string>[] = []
-
-        const coinType = resolveRequest.chainId || ETH_COIN
-        const addressPromise = this.ensResolver.resolveAddress(name, coinType);
-
-        promises.push(addressPromise);
-
-        if (resolveRequest.avatar) {
-            const avatarPromise = this.ensResolver.resolveText(name, "avatar");
-            promises.push(avatarPromise);
-        }
-
-        const [address, avatar] = await Promise.all(promises);
-
-        return {
-            avatar: avatar,
-            value: address,
-            chainId: coinType || undefined
-        }
-
-    }
-
-    public async resolveAddresses(name: string, resolveRequest: ResolveAddressRequest) {
-        throw new Error("Method not implemented.");
+        return this.ensResolver.resolve(name, resolveRequest);
     }
 }

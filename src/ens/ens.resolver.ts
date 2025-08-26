@@ -1,24 +1,27 @@
-import { Injectable } from "@nestjs/common";
+import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
 import { IResolverService } from "../resolver";
-import { createPublicClient, http } from "viem";
-import { mainnet, sepolia } from "viem/chains";
+import { http } from "viem";
+import { mainnet } from "viem/chains";
 import { createEnsPublicClient } from "@ensdomains/ensjs";
 import { InMemoryEnsCache } from "./in-memory-ens.cache";
 import { CacheType, EnsCache } from "./interface/ens.cache";
 import { ARBITRUM_COIN, AVATAR_TEXT, BASE_COIN, BTC_COIN, DESCRIPTION_TEXT, DISCORD_TEXT, EMAIL_TEXT, ETH_COIN, GITHUB_TEXT, HEADER_TEXT, NAME_TEXT, OP_COIN, SOL_COIN, TELEGRAM_TEXT, TWITTER_TEXT, URL_TEXT } from "./ens.utils";
 import { EnsAddressRecord, EnsProfile, EnsTextRecord } from "./ens.types";
 import { EnsAddressesResponse, EnsTextsResponse } from "./dto/response.dto";
-import { ResolveNameRequest } from "src/resolver/types/resolve-name";
+import { ResolveNameRequest, ResolveNameResponse } from "src/resolver/types/resolve-name";
+import { EthClients } from "src/web3/eth.clients";
+import { NameProtocol } from "src/resolver/types/protocol";
+import { Blockchains, getBlockchainByChainId } from "./coins";
 
 // Default addresses to resolve 
 // if the addresses parameter is not provided
 const DefaultCoins: number[] = [
-    ETH_COIN,
-    BTC_COIN,
-    SOL_COIN,
-    OP_COIN,
-    BASE_COIN,
-    ARBITRUM_COIN
+    Blockchains.eth.coin_type,
+    Blockchains.btc.coin_type,
+    Blockchains.sol.coin_type,
+    Blockchains.op.coin_type,
+    Blockchains.base.coin_type,
+    Blockchains.arb.coin_type
 ]
 
 // Default texts to resolve 
@@ -40,18 +43,13 @@ const DefaultTexts: string[] = [
 export class EnsResolver implements IResolverService {
 
     private ensClient: ReturnType<typeof createEnsPublicClient>;
-    private ensCache: EnsCache 
-    private web3Client: ReturnType<typeof createPublicClient>;
+    private ensCache: EnsCache
 
-    constructor(private readonly _ensCache: InMemoryEnsCache) {
-        const rpc = process.env.RPC_URL;
-        const is_testnet = process.env.is_testnet;
-        const rpcChain = is_testnet ? sepolia : mainnet;
+    constructor(private readonly _ensCache: InMemoryEnsCache, private readonly ethClients: EthClients) {
         this.ensClient = createEnsPublicClient({
-            transport: http(rpc),
-            chain: rpcChain,
+            transport: http(this.ethClients.getMainnetRpcUrl()),
+            chain: mainnet,
         })
-
         this.ensCache = this._ensCache;
     }
 
@@ -59,26 +57,72 @@ export class EnsResolver implements IResolverService {
         this.ensCache.clearCacheForName(name, [type]);
     }
 
-    public async resolve(name: string, resolveRequest: ResolveNameRequest) {
-        const cachedAddresses = this.ensCache.getAddresses(name, [resolveRequest.chainId || ETH_COIN]);
+    public async resolve(name: string, resolveRequest: ResolveNameRequest): Promise<ResolveNameResponse> {
 
-        if (cachedAddresses) {
+        const chain_id = resolveRequest.chain_id !== undefined ? resolveRequest.chain_id : mainnet.id;
+        const blockchain = getBlockchainByChainId(chain_id)
 
+        if (!blockchain) {
+            throw new BadRequestException(`Chain with id: ${chain_id} not supported`)
         }
 
+        const coin_type = blockchain.coin_type;
+        const cachedAddresses = this.ensCache.getAddresses(name, [coin_type]);
 
-        throw new Error("Method not implemented.");
-    }
+        let response: ResolveNameResponse = {
+            protocol: NameProtocol.ENS,
+            value: "",
+            chain_id: blockchain.chain_id,
+        }
 
-    public async resolveAddress(name: string, coin: number): Promise<string> {
-        
-        return "";
+        if (cachedAddresses) {
+            response.value = cachedAddresses[0].address;
+            return response;
+        }
+
+        const address = await this.ensClient.getAddressRecord({
+            name: name,
+            coin: coin_type
+        })
+
+        if (address) {
+            this.ensCache.setAddresses(name, [coin_type], [{
+                coin: coin_type,
+                address: address.value,
+                name: address.name
+            }])
+        } else {
+            throw new NotFoundException()
+        }
+
+        response.value = address.value
+        return response;
     }
 
     public async resolveContenthash(name: string) {
-        
+
         const cachedValue = this.ensCache.getContenthash(name);
-        return cachedValue;
+
+        if (cachedValue) {
+            return {
+                contenthash: cachedValue
+            }
+        }
+
+        const contenthash = await this.ensClient.getContentHashRecord({
+            name: name
+        })
+
+        if (!contenthash) {
+            throw new NotFoundException()
+        }
+
+        const uri = `${contenthash.protocolType}://${contenthash.decoded}`
+        this.ensCache.setContenthash(name, uri);
+
+        return {
+            contenthash: uri
+        }
     }
 
     public async resolveProfile(name: string, noCache: boolean = false): Promise<EnsProfile> {
@@ -105,7 +149,7 @@ export class EnsResolver implements IResolverService {
         const profile: EnsProfile = {
             name: name,
             addresses: (result && result.coins && result.coins.length) ? result.coins.map(coin => {
-                return { address: coin.value, coin: coin.id, name: coin.name}
+                return { address: coin.value, coin: coin.id, name: coin.name }
             }) : [],
             texts: (result && result.texts) ? result.texts : [],
             contenthash: contenthash,

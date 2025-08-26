@@ -1,4 +1,4 @@
-import { Transform } from "class-transformer"
+import { Transform, Type } from "class-transformer"
 import { IsOptional, IsString, Length, IsArray, IsNumber } from "class-validator"
 import { ApiProperty } from "@nestjs/swagger"
 
@@ -41,8 +41,8 @@ export class EnsAddressesRequest extends NoCache {
         example: [60, 0]
     })
     @IsOptional()
-    @IsArray()
-    @IsNumber({}, { each: true })
+    @Type(() => Number)                // <-- convert each element to number
+    @IsNumber({}, { each: true })      // <-- validate each element
     coins?: number[]
 }
 
@@ -57,36 +57,4 @@ export class EnsTextsRequest extends NoCache {
     @IsArray()
     @IsString({ each: true })
     keys?: string[]
-}
-
-export class EnsProfileRequest {
-    @ApiProperty({
-        description: 'Array of coin types for addresses to include',
-        required: false,
-        type: [Number],
-        example: [60, 0]
-    })
-    @IsOptional()
-    @IsArray()
-    @IsNumber({}, { each: true })
-    addresses?: number[]
-
-    @ApiProperty({
-        description: 'Array of text record keys to include',
-        required: false,
-        type: [String],
-        example: ['avatar', 'description']
-    })
-    @IsOptional()
-    @IsArray()
-    @IsString({ each: true })
-    texts?: string[]
-
-    @ApiProperty({
-        description: 'Include content hash in profile',
-        required: false,
-        default: true
-    })
-    @IsOptional()
-    contenthash?: boolean
 }
