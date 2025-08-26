@@ -59,7 +59,7 @@ export class EnsResolver implements IResolverService {
 
     public async resolve(name: string, resolveRequest: ResolveNameRequest): Promise<ResolveNameResponse> {
 
-        const chain_id = resolveRequest.chainId || mainnet.id;
+        const chain_id = resolveRequest.chain_id !== undefined ? resolveRequest.chain_id : mainnet.id;
         const blockchain = getBlockchainByChainId(chain_id)
 
         if (!blockchain) {
@@ -72,7 +72,7 @@ export class EnsResolver implements IResolverService {
         let response: ResolveNameResponse = {
             protocol: NameProtocol.ENS,
             value: "",
-            chainId: blockchain.chain_id,
+            chain_id: blockchain.chain_id,
         }
 
         if (cachedAddresses) {
@@ -99,15 +99,30 @@ export class EnsResolver implements IResolverService {
         return response;
     }
 
-    public async resolveAddress(name: string, coin: number): Promise<string> {
-
-        return "";
-    }
-
     public async resolveContenthash(name: string) {
 
         const cachedValue = this.ensCache.getContenthash(name);
-        return cachedValue;
+
+        if (cachedValue) {
+            return {
+                contenthash: cachedValue
+            }
+        }
+
+        const contenthash = await this.ensClient.getContentHashRecord({
+            name: name
+        })
+
+        if (!contenthash) {
+            throw new NotFoundException()
+        }
+
+        const uri = `${contenthash.protocolType}://${contenthash.decoded}`
+        this.ensCache.setContenthash(name, uri);
+
+        return {
+            contenthash: uri
+        }
     }
 
     public async resolveProfile(name: string, noCache: boolean = false): Promise<EnsProfile> {

@@ -62,7 +62,7 @@ export enum ChainIds {
 
 export const Blockchains: Record<ChainName, Blockchain> = {
   // EVM (coin_type via helper)
-  [ChainName.Ethereum]:   { name: 'Ethereum',           chain_id: ChainIds.Ethereum,   coin_type: convertEVMChainIdToCoinType(ChainIds.Ethereum) },
+  [ChainName.Ethereum]:   { name: 'Ethereum',           chain_id: ChainIds.Ethereum,   coin_type: 60 },
   [ChainName.Arbitrum]:   { name: 'Arbitrum One',       chain_id: ChainIds.Arbitrum,   coin_type: convertEVMChainIdToCoinType(ChainIds.Arbitrum) },
   [ChainName.Optimism]:   { name: 'Optimism',           chain_id: ChainIds.Optimism,   coin_type: convertEVMChainIdToCoinType(ChainIds.Optimism) },
   [ChainName.Base]:       { name: 'Base',               chain_id: ChainIds.Base,       coin_type: convertEVMChainIdToCoinType(ChainIds.Base) },
