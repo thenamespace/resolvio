@@ -11,17 +11,17 @@ import { EnsAddressesResponse, EnsTextsResponse } from "./dto/response.dto";
 import { ResolveNameRequest, ResolveNameResponse } from "src/resolver/types/resolve-name";
 import { EthClients } from "src/web3/eth.clients";
 import { NameProtocol } from "src/resolver/types/protocol";
-import { getBlockchainByChainId } from "./coins";
+import { Blockchains, getBlockchainByChainId } from "./coins";
 
 // Default addresses to resolve 
 // if the addresses parameter is not provided
 const DefaultCoins: number[] = [
-    ETH_COIN,
-    BTC_COIN,
-    SOL_COIN,
-    OP_COIN,
-    BASE_COIN,
-    ARBITRUM_COIN
+    Blockchains.eth.coin_type,
+    Blockchains.btc.coin_type,
+    Blockchains.sol.coin_type,
+    Blockchains.op.coin_type,
+    Blockchains.base.coin_type,
+    Blockchains.arb.coin_type
 ]
 
 // Default texts to resolve 
