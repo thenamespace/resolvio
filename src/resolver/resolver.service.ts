@@ -1,6 +1,5 @@
 import { Injectable, NotImplementedException } from "@nestjs/common";
 import { ResolveNameRequest, ResolveNameResponse } from "./types/resolve-name";
-import { ResolveAddressRequest } from "./types/resolve-address.request";
 import { EnsResolver } from "src/ens/ens.resolver";
 import { NameProtocol } from "./types/protocol";
 import { ETH_COIN } from "src/ens/ens.utils";
@@ -47,9 +46,5 @@ export class ResolverService implements IResolverService {
             chainId: coinType || undefined
         }
 
-    }
-
-    public async resolveAddresses(name: string, resolveRequest: ResolveAddressRequest) {
-        throw new Error("Method not implemented.");
     }
 }
