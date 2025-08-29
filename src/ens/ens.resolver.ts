@@ -46,8 +46,9 @@ export class EnsResolver implements IResolverService {
     private ensCache: EnsCache
 
     constructor(private readonly _ensCache: InMemoryEnsCache, private readonly ethClients: EthClients) {
+        const mainnetRpc = this.ethClients.getMainnetRpcUrl();
         this.ensClient = createEnsPublicClient({
-            transport: http(this.ethClients.getMainnetRpcUrl()),
+            transport: http(mainnetRpc),
             chain: mainnet,
         })
         this.ensCache = this._ensCache;
@@ -125,8 +126,7 @@ export class EnsResolver implements IResolverService {
         }
     }
 
-    public async resolveProfile(name: string, noCache: boolean = false): Promise<EnsProfile> {
-
+    public async resolveProfile(name: string, noCache: boolean): Promise<EnsProfile> {
         const cacheData = this.ensCache.getProfile(name);
 
         if (cacheData && !noCache) {
