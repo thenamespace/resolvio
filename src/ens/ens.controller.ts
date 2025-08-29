@@ -21,7 +21,7 @@ export class EnsResolveController {
     @ENS_ENDPOINTS.getEnsProfile.response400
     @ENS_ENDPOINTS.getEnsProfile.response404
     public async getEnsProfile(@Param() name: EnsNameRequest, @Query() cache: NoCache) {
-        return this.ensResolver.resolveProfile(name.name, cache.noCache);
+        return this.ensResolver.resolveProfile(name.name, cache.noCache || false);
     }
 
     @Get("/name/:name/addresses")

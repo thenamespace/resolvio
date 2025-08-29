@@ -29,7 +29,9 @@ export class NoCache {
         default: false
     })
     @IsOptional()
-    @Transform(({ value }) => value && value === "true" )
+    @Transform(({ value }) => {
+        return  value && (value === "true" || value === true);
+    })
     noCache?: boolean
 }
 
