@@ -2,6 +2,7 @@ import { createPublicClient, http } from "viem";
 import { EthChain } from "./eth.types";
 import { base, mainnet, optimism } from "viem/chains";
 import { Injectable } from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
 
 export type EthClient = ReturnType<typeof createPublicClient>
 
@@ -10,10 +11,9 @@ export class EthClients {
 
     private clients: Partial<Record<EthChain, EthClient>> = {}
 
-    constructor() {
+    constructor(private config: ConfigService) {
 
-        const alchemy_token = process.env.ALCHEMY_TOKEN || "";
-
+        const alchemy_token = this.config.get("ALCHEMY_TOKEN");
         const baseClient = createPublicClient({
             chain: base,
             transport: http(this.generateAlchemyUri(alchemy_token, "eth-mainnet"))
