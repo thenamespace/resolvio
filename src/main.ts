@@ -33,6 +33,12 @@ async function bootstrap() {
     res.send(document);
   });
 
+    app.enableCors({
+        methods: ['POST', 'GET', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+        allowedHeaders: '*',
+        origin: '*',
+    });
+
   await app.listen(process.env.PORT ?? 3000);
 }
 bootstrap();
