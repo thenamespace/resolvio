@@ -106,7 +106,7 @@ export class InMemoryEnsCache implements EnsCache {
           const hash = namehash(name);
         for (const key of Object.keys(this.textsCache)) {
             if (key.startsWith(hash)) {
-                delete this.addressesCache[key]
+                delete this.textsCache[key]
             }
         }
     }

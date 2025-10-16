@@ -7,7 +7,7 @@ const Footer = () => {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
           {/* Brand */}
           <div className="col-span-1 md:col-span-2">
-            <h3 className="text-2xl font-bold text-white mb-4 bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">
+            <h3 className="text-2xl font-bold text-orange-500 mb-4">
               Resolvio
             </h3>
             <p className="text-gray-400 mb-4 max-w-md">
@@ -18,7 +18,7 @@ const Footer = () => {
                 href="https://github.com"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-10 h-10 rounded-full bg-gray-800 hover:bg-indigo-600 flex items-center justify-center transition-colors duration-300"
+                className="w-10 h-10 rounded-full bg-gray-800 hover:bg-orange-600 flex items-center justify-center transition-colors duration-300"
               >
                 <Github className="w-5 h-5" />
               </a>
@@ -26,13 +26,13 @@ const Footer = () => {
                 href="https://twitter.com"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-10 h-10 rounded-full bg-gray-800 hover:bg-indigo-600 flex items-center justify-center transition-colors duration-300"
+                className="w-10 h-10 rounded-full bg-gray-800 hover:bg-orange-600 flex items-center justify-center transition-colors duration-300"
               >
                 <Twitter className="w-5 h-5" />
               </a>
               <a
                 href="mailto:arti@namespace.ninja"
-                className="w-10 h-10 rounded-full bg-gray-800 hover:bg-indigo-600 flex items-center justify-center transition-colors duration-300"
+                className="w-10 h-10 rounded-full bg-gray-800 hover:bg-orange-600 flex items-center justify-center transition-colors duration-300"
               >
                 <Mail className="w-5 h-5" />
               </a>
@@ -46,7 +46,7 @@ const Footer = () => {
               <li>
                 <a
                   href="#playground"
-                  className="hover:text-indigo-400 transition-colors duration-300"
+                  className="hover:text-orange-400 transition-colors duration-300"
                 >
                   Playground
                 </a>
@@ -64,7 +64,7 @@ const Footer = () => {
               <li>
                 <a
                   href="#"
-                  className="hover:text-indigo-400 transition-colors duration-300"
+                  className="hover:text-orange-400 transition-colors duration-300"
                 >
                   Pricing
                 </a>
@@ -72,7 +72,7 @@ const Footer = () => {
               <li>
                 <a
                   href="#"
-                  className="hover:text-indigo-400 transition-colors duration-300"
+                  className="hover:text-orange-400 transition-colors duration-300"
                 >
                   Status
                 </a>
@@ -87,7 +87,7 @@ const Footer = () => {
               <li>
                 <a
                   href="#"
-                  className="hover:text-indigo-400 transition-colors duration-300"
+                  className="hover:text-orange-400 transition-colors duration-300"
                 >
                   Documentation
                 </a>
@@ -95,7 +95,7 @@ const Footer = () => {
               <li>
                 <a
                   href="#"
-                  className="hover:text-indigo-400 transition-colors duration-300"
+                  className="hover:text-orange-400 transition-colors duration-300"
                 >
                   Guides
                 </a>
@@ -103,7 +103,7 @@ const Footer = () => {
               <li>
                 <a
                   href="#"
-                  className="hover:text-indigo-400 transition-colors duration-300"
+                  className="hover:text-orange-400 transition-colors duration-300"
                 >
                   Blog
                 </a>
@@ -111,7 +111,7 @@ const Footer = () => {
               <li>
                 <a
                   href="#"
-                  className="hover:text-indigo-400 transition-colors duration-300"
+                  className="hover:text-orange-400 transition-colors duration-300"
                 >
                   Support
                 </a>
@@ -127,13 +127,13 @@ const Footer = () => {
               © {new Date().getFullYear()} Resolvio. All rights reserved.
             </p>
             <div className="flex gap-6 text-sm">
-              <a href="#" className="text-gray-400 hover:text-indigo-400 transition-colors duration-300">
+              <a href="#" className="text-gray-400 hover:text-orange-400 transition-colors duration-300">
                 Privacy Policy
               </a>
-              <a href="#" className="text-gray-400 hover:text-indigo-400 transition-colors duration-300">
+              <a href="#" className="text-gray-400 hover:text-orange-400 transition-colors duration-300">
                 Terms of Service
               </a>
-              <a href="#" className="text-gray-400 hover:text-indigo-400 transition-colors duration-300">
+              <a href="#" className="text-gray-400 hover:text-orange-400 transition-colors duration-300">
                 Cookie Policy
               </a>
             </div>

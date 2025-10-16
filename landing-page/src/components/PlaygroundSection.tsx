@@ -26,7 +26,7 @@ const PlaygroundSection = () => {
   };
 
   return (
-    <div id="playground" className="py-20 bg-white">
+    <div id="playground" className="py-20 bg-gray-900">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-6xl">
         <motion.div
           className="text-center mb-16"
@@ -35,12 +35,10 @@ const PlaygroundSection = () => {
           transition={{ duration: 0.6 }}
           viewport={{ once: true }}
         >
-          <h2 className="text-4xl sm:text-5xl md:text-6xl font-bold text-gray-900 mb-6">
-            <span className="bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
-              Try It Now
-            </span>
+          <h2 className="text-4xl sm:text-5xl md:text-6xl font-bold mb-6 text-white">
+            Try It Now
           </h2>
-          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+          <p className="text-xl text-gray-300 max-w-3xl mx-auto">
             Test ENS resolution with real-time results. Enter any .eth name and see the magic happen.
           </p>
         </motion.div>
@@ -53,7 +51,7 @@ const PlaygroundSection = () => {
             transition={{ duration: 0.6, delay: 0.2 }}
             viewport={{ once: true }}
           >
-            <Card className="shadow-xl border-0 bg-gradient-to-br from-white to-indigo-50">
+            <Card className="shadow-xl border-0 bg-white">
               <CardHeader>
                 <CardTitle className="text-2xl font-bold text-gray-900">
                   Resolution Request
@@ -72,7 +70,7 @@ const PlaygroundSection = () => {
                     value={ensName}
                     onChange={(e) => setEnsName(e.target.value)}
                     onKeyDown={(e) => e.key === "Enter" && handleResolve()}
-                    className="text-lg h-12 border-2 focus:border-indigo-500 transition-colors"
+                    className="text-lg h-12 border-2 focus:border-orange-500 transition-colors"
                   />
                 </div>
 
@@ -129,7 +127,7 @@ const PlaygroundSection = () => {
                 <Button
                   onClick={handleResolve}
                   disabled={loading || !ensName.trim()}
-                  className="w-full h-12 text-lg font-semibold bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 transition-all duration-300 transform hover:scale-105"
+                  className="w-full h-12 text-lg font-semibold bg-orange-500 hover:bg-orange-600 transition-all duration-200"
                 >
                   {loading ? (
                     <>
@@ -198,7 +196,7 @@ const PlaygroundSection = () => {
 
                 {loading && (
                   <div className="flex flex-col items-center justify-center py-16">
-                    <Loader2 className="w-12 h-12 animate-spin text-indigo-600 mb-4" />
+                    <Loader2 className="w-12 h-12 animate-spin text-orange-600 mb-4" />
                     <p className="text-gray-600">Resolving ENS name...</p>
                   </div>
                 )}
@@ -223,7 +221,7 @@ const PlaygroundSection = () => {
                 variant="outline"
                 size="sm"
                 onClick={() => setEnsName(example)}
-                className="rounded-full hover:bg-indigo-50 hover:border-indigo-300 transition-colors"
+                className="rounded-full hover:bg-orange-50 hover:border-orange-300 transition-colors"
               >
                 {example}
               </Button>

@@ -44,7 +44,7 @@ const features = [
 
 const FeaturesSection = () => {
   return (
-    <div className="py-20 bg-gradient-to-br from-gray-50 to-indigo-50">
+    <div className="py-20 bg-gray-900">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl">
         <motion.div
           className="text-center mb-20"
@@ -53,12 +53,10 @@ const FeaturesSection = () => {
           transition={{ duration: 0.6 }}
           viewport={{ once: true }}
         >
-          <h2 className="text-4xl sm:text-5xl md:text-6xl font-bold text-gray-900 mb-6">
-            <span className="bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
-              Why Resolvio?
-            </span>
+          <h2 className="text-4xl sm:text-5xl md:text-6xl font-bold mb-6 text-white">
+            Why Resolvio?
           </h2>
-          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+          <p className="text-xl text-gray-300 max-w-3xl mx-auto">
             The most powerful and developer-friendly Web3 name resolution service
           </p>
         </motion.div>
@@ -72,19 +70,21 @@ const FeaturesSection = () => {
               transition={{ duration: 0.5, delay: index * 0.1 }}
               viewport={{ once: true }}
             >
-              <Card className="group h-full border-0 shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 bg-white/80 backdrop-blur-sm">
+              <Card className="group h-full border border-orange-500/20 shadow-xl hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 bg-gray-800/60 backdrop-blur-sm">
                 <CardContent className="p-8">
                   <div
-                    className={`w-16 h-16 rounded-2xl bg-gradient-to-r ${feature.color} flex items-center justify-center text-white mb-6 shadow-lg group-hover:scale-110 transition-transform duration-300`}
+                    className="w-16 h-16 rounded-2xl bg-white border-2 border-orange-500 flex items-center justify-center mb-6 shadow-lg group-hover:scale-110 transition-transform duration-300"
                   >
-                    {feature.icon}
+                    <div className="text-orange-500">
+                      {feature.icon}
+                    </div>
                   </div>
 
-                  <h3 className="text-2xl font-bold text-gray-900 mb-4 group-hover:text-indigo-600 transition-colors duration-300">
+                  <h3 className="text-2xl font-bold text-white mb-4 group-hover:text-orange-400 transition-colors duration-300">
                     {feature.title}
                   </h3>
 
-                  <p className="text-gray-600 leading-relaxed">
+                  <p className="text-gray-300 leading-relaxed">
                     {feature.description}
                   </p>
                 </CardContent>
@@ -101,11 +101,11 @@ const FeaturesSection = () => {
           viewport={{ once: true }}
           className="mt-20 text-center"
         >
-          <div className="bg-gradient-to-r from-indigo-600 to-purple-600 rounded-3xl p-12 shadow-2xl">
+          <div className="bg-gray-800 rounded-lg p-12 shadow-xl border-2 border-orange-500">
             <h3 className="text-3xl md:text-4xl font-bold text-white mb-4">
               Ready to get started?
             </h3>
-            <p className="text-xl text-indigo-100 mb-8 max-w-2xl mx-auto">
+            <p className="text-xl text-gray-300 mb-8 max-w-2xl mx-auto">
               Join developers building the future of Web3 with Resolvio
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -115,13 +115,13 @@ const FeaturesSection = () => {
                     behavior: "smooth",
                   });
                 }}
-                className="px-8 py-4 bg-white text-indigo-600 font-semibold rounded-xl shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300"
+                className="px-8 py-4 bg-orange-500 hover:bg-orange-600 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all duration-200"
               >
-                Try it Free
+                Try it
               </button>
               <button
                 onClick={() => window.open(`${API_CONFIG.baseUrl}/api/docs`, "_blank")}
-                className="px-8 py-4 bg-indigo-800 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl hover:bg-indigo-900 hover:scale-105 transition-all duration-300"
+                className="px-8 py-4 bg-gray-700 hover:bg-gray-600 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all duration-200"
               >
                 Read the Docs
               </button>

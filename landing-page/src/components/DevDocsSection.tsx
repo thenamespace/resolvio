@@ -46,7 +46,7 @@ print(profile)`,
 
 const DevDocsSection = () => {
   return (
-    <div className="py-20 bg-white">
+    <div className="py-20 bg-gray-900">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl">
         <motion.div
           className="text-center mb-16"
@@ -55,12 +55,10 @@ const DevDocsSection = () => {
           transition={{ duration: 0.6 }}
           viewport={{ once: true }}
         >
-          <h2 className="text-4xl sm:text-5xl md:text-6xl font-bold text-gray-900 mb-6">
-            <span className="bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
-              Developer Documentation
-            </span>
+          <h2 className="text-4xl sm:text-5xl md:text-6xl font-bold mb-6 text-white">
+            Developer Documentation
           </h2>
-          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+          <p className="text-xl text-gray-300 max-w-3xl mx-auto">
             Get started in minutes with our simple and powerful API
           </p>
         </motion.div>
@@ -73,62 +71,62 @@ const DevDocsSection = () => {
             transition={{ duration: 0.6 }}
             viewport={{ once: true }}
           >
-            <Card className="h-full shadow-xl border-0 bg-gradient-to-br from-white to-indigo-50">
+            <Card className="h-full shadow-xl border border-orange-500/20 bg-gray-800/60 backdrop-blur-sm">
               <CardContent className="p-8">
                 <div className="flex items-center gap-3 mb-6">
-                  <div className="w-12 h-12 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 flex items-center justify-center">
+                  <div className="w-12 h-12 rounded-lg bg-orange-500 flex items-center justify-center">
                     <Rocket className="w-6 h-6 text-white" />
                   </div>
-                  <h3 className="text-2xl font-bold text-gray-900">Quick Start</h3>
+                  <h3 className="text-2xl font-bold text-white">Quick Start</h3>
                 </div>
 
                 <div className="space-y-4">
                   <div className="flex gap-4">
-                    <div className="flex-shrink-0 w-8 h-8 rounded-full bg-indigo-600 text-white flex items-center justify-center font-bold">
+                    <div className="flex-shrink-0 w-8 h-8 rounded-full bg-orange-500 text-white flex items-center justify-center font-bold">
                       1
                     </div>
                     <div>
-                      <h4 className="font-semibold text-gray-900 mb-1">
+                      <h4 className="font-semibold text-white mb-1">
                         No API Key Required
                       </h4>
-                      <p className="text-gray-600 text-sm">
+                      <p className="text-gray-300 text-sm">
                         Start using the API immediately without authentication
                       </p>
                     </div>
                   </div>
 
                   <div className="flex gap-4">
-                    <div className="flex-shrink-0 w-8 h-8 rounded-full bg-indigo-600 text-white flex items-center justify-center font-bold">
+                    <div className="flex-shrink-0 w-8 h-8 rounded-full bg-orange-500 text-white flex items-center justify-center font-bold">
                       2
                     </div>
                     <div>
-                      <h4 className="font-semibold text-gray-900 mb-1">
+                      <h4 className="font-semibold text-white mb-1">
                         Make Your First Request
                       </h4>
-                      <p className="text-gray-600 text-sm">
+                      <p className="text-gray-300 text-sm">
                         Use any HTTP client to resolve ENS names
                       </p>
                     </div>
                   </div>
 
                   <div className="flex gap-4">
-                    <div className="flex-shrink-0 w-8 h-8 rounded-full bg-indigo-600 text-white flex items-center justify-center font-bold">
+                    <div className="flex-shrink-0 w-8 h-8 rounded-full bg-orange-500 text-white flex items-center justify-center font-bold">
                       3
                     </div>
                     <div>
-                      <h4 className="font-semibold text-gray-900 mb-1">
+                      <h4 className="font-semibold text-white mb-1">
                         Integrate & Build
                       </h4>
-                      <p className="text-gray-600 text-sm">
+                      <p className="text-gray-300 text-sm">
                         Parse the JSON response and build amazing apps
                       </p>
                     </div>
                   </div>
                 </div>
 
-                <div className="mt-8 p-6 bg-white rounded-xl border-2 border-indigo-200">
+                <div className="mt-8 p-6 bg-white rounded-xl border-2 border-orange-200">
                   <div className="flex items-center gap-2 mb-3">
-                    <Terminal className="w-4 h-4 text-indigo-600" />
+                    <Terminal className="w-4 h-4 text-orange-600" />
                     <span className="text-sm font-mono text-gray-500">Terminal</span>
                   </div>
                   <pre className="text-sm font-mono text-gray-800 overflow-x-auto">
@@ -146,13 +144,13 @@ const DevDocsSection = () => {
             transition={{ duration: 0.6 }}
             viewport={{ once: true }}
           >
-            <Card className="h-full shadow-xl border-0 bg-gradient-to-br from-white to-purple-50">
+            <Card className="h-full shadow-xl border border-orange-500/20 bg-gray-800/60 backdrop-blur-sm">
               <CardContent className="p-8">
                 <div className="flex items-center gap-3 mb-6">
-                  <div className="w-12 h-12 rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 flex items-center justify-center">
+                  <div className="w-12 h-12 rounded-lg bg-gray-700 flex items-center justify-center">
                     <BookOpen className="w-6 h-6 text-white" />
                   </div>
-                  <h3 className="text-2xl font-bold text-gray-900">API Endpoints</h3>
+                  <h3 className="text-2xl font-bold text-white">API Endpoints</h3>
                 </div>
 
                 <div className="space-y-4">
@@ -207,7 +205,7 @@ const DevDocsSection = () => {
 
                 <button
                   onClick={() => window.open(`${API_URL}/api/docs`, "_blank")}
-                  className="mt-6 w-full px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-lg hover:from-purple-700 hover:to-pink-700 transition-all duration-300 hover:scale-105"
+                  className="mt-6 w-full px-6 py-3 bg-orange-500 hover:bg-orange-600 text-white font-semibold rounded-lg transition-all duration-200"
                 >
                   View Full API Documentation
                 </button>
@@ -224,10 +222,10 @@ const DevDocsSection = () => {
           viewport={{ once: true }}
         >
           <div className="flex items-center gap-3 mb-8">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 flex items-center justify-center">
+            <div className="w-12 h-12 rounded-lg bg-orange-500 flex items-center justify-center">
               <Code className="w-6 h-6 text-white" />
             </div>
-            <h3 className="text-3xl font-bold text-gray-900">Code Examples</h3>
+            <h3 className="text-3xl font-bold text-white">Code Examples</h3>
           </div>
 
           <Accordion type="single" collapsible className="space-y-4">
@@ -235,9 +233,9 @@ const DevDocsSection = () => {
               <AccordionItem
                 key={index}
                 value={`item-${index}`}
-                className="border-0 shadow-lg rounded-xl overflow-hidden bg-white"
+                className="border border-orange-500/20 shadow-lg rounded-xl overflow-hidden bg-gray-800/60 backdrop-blur-sm"
               >
-                <AccordionTrigger className="px-6 py-4 hover:bg-gray-50 text-left font-semibold text-lg">
+                <AccordionTrigger className="px-6 py-4 hover:bg-gray-700/50 text-left font-semibold text-lg text-white">
                   {example.title}
                 </AccordionTrigger>
                 <AccordionContent className="px-6 pb-6">
