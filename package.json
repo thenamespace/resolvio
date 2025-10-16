@@ -7,6 +7,9 @@
   "license": "UNLICENSED",
   "scripts": {
     "build": "nest build",
+    "build:frontend": "npm --prefix landing-page run build",
+    "copy:frontend": "rm -rf public && cp -r landing-page/dist public",
+    "build:all": "npm run build && npm run build:frontend && npm run copy:frontend",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "nest start",
     "start:dev": "nest start --watch",
@@ -25,6 +28,7 @@
     "@nestjs/config": "^4.0.2",
     "@nestjs/core": "^11.0.1",
     "@nestjs/platform-express": "^11.0.1",
+    "@nestjs/serve-static": "^5.0.4",
     "@nestjs/swagger": "^11.2.0",
     "@thenamespace/addresses": "^1.0.15",
     "class-transformer": "^0.5.1",

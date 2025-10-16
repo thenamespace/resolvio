@@ -1,26 +1,64 @@
-# Use Node.js LTS version as the base image
-FROM node:20-slim
+# Multi-stage build for NestJS backend + React frontend
 
-# Install yarn if not already included
-RUN corepack enable
+# Stage 1: Build frontend
+FROM node:20-alpine AS frontend-builder
 
-# Set working directory
+WORKDIR /app/landing-page
+
+# Copy frontend package files
+COPY landing-page/package*.json ./
+
+# Install frontend dependencies
+RUN npm ci
+
+# Copy frontend source
+COPY landing-page/ ./
+
+# Build frontend
+RUN npm run build
+
+# Stage 2: Build backend
+FROM node:20-alpine AS backend-builder
+
 WORKDIR /app
 
-# Copy package files and TypeScript config
-COPY package.json yarn.lock tsconfig.json ./
+# Copy backend package files
+COPY package*.json ./
 
-# Install dependencies
-RUN yarn install --frozen-lockfile
+# Install backend dependencies
+RUN npm ci
 
-# Copy source code
+# Copy backend source
 COPY src/ ./src/
+COPY tsconfig*.json ./
+COPY nest-cli.json ./
 
-# Build the application
-RUN yarn build
+# Build backend
+RUN npm run build
 
-# Expose port 3000
+# Stage 3: Production image
+FROM node:20-alpine AS production
+
+WORKDIR /app
+
+# Copy backend package files
+COPY package*.json ./
+
+# Install only production dependencies
+RUN npm ci --only=production
+
+# Copy built backend from builder
+COPY --from=backend-builder /app/dist ./dist
+
+# Copy built frontend from frontend-builder
+COPY --from=frontend-builder /app/landing-page/dist ./public
+
+# Expose port
 EXPOSE 3000
 
-# Run the application
-CMD ["node", "dist/main.js"]
+# Set environment variables
+ENV NODE_ENV=production
+ENV PORT=3000
+
+# Start the application
+CMD ["node", "dist/main"]

@@ -1,1 +1,42 @@
+# Dependencies
 node_modules
+landing-page/node_modules
+
+# Build output
+dist
+public
+landing-page/dist
+
+# Development
+.env
+.env.local
+landing-page/.env
+landing-page/.env.local
+
+# Git
+.git
+.gitignore
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+
+# Testing
+coverage
+.nyc_output
+
+# Misc
+.DS_Store
+*.pem
+
+# Documentation
+README.md
+DEPLOYMENT.md
