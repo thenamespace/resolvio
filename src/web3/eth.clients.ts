@@ -16,7 +16,7 @@ export class EthClients {
         const alchemy_token = this.config.get("ALCHEMY_TOKEN");
         const baseClient = createPublicClient({
             chain: base,
-            transport: http(this.generateAlchemyUri(alchemy_token, "eth-mainnet"))
+            transport: http(this.generateAlchemyUri(alchemy_token, "base-mainnet"))
         })
 
         const opClient = createPublicClient({
@@ -26,7 +26,7 @@ export class EthClients {
 
         const mainnetClient = createPublicClient({
             chain: mainnet,
-            transport: http(this.generateAlchemyUri(alchemy_token, "base-mainnet"))
+            transport: http(this.generateAlchemyUri(alchemy_token, "eth-mainnet"))
         })
 
         this.clients = {

@@ -1,6 +1,6 @@
-import { Controller, Delete, Get, Param, Query } from "@nestjs/common";
+import { Body, Controller, Delete, Get, Param, Post, Query } from "@nestjs/common";
 import { EnsResolver } from "./ens.resolver";
-import { EnsAddressesRequest, EnsNameRequest, EnsTextsRequest, NoCache } from "./dto/requests.dto";
+import { BulkReverseResolveRequest, EnsAddressesRequest, EnsNameRequest, EnsTextsRequest, NoCache } from "./dto/requests.dto";
 import { CacheType } from "./interface/ens.cache";
 import { EnsMetadata } from "./ens.types";
 import { ENS_ENDPOINTS } from "../docs/ens.endpoints";
@@ -82,4 +82,17 @@ export class EnsResolveController {
     public async clearCache(@Param() name: EnsNameRequest) {
         return this.ensResolver.clearCache(name.name, CacheType.ALL);
     }
+
+
+    @Post("/reverse/:address")
+    public async reverseResolve() {
+
+    }
+
+
+    @Post("/reverse/bulk")
+    public async bulkReverseResolve(@Body() request: BulkReverseResolveRequest) {
+        return this.ensResolver.bulkReverseResolve(request);
+    }
+
 }
