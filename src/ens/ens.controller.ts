@@ -1,10 +1,12 @@
-import { Body, Controller, Delete, Get, Param, Post, Query } from "@nestjs/common";
+import { BadRequestException, Body, Controller, Delete, Get, Param, Post, Query } from "@nestjs/common";
 import { EnsResolver } from "./ens.resolver";
 import { BulkReverseResolveRequest, EnsAddressesRequest, EnsNameRequest, EnsTextsRequest, NoCache } from "./dto/requests.dto";
 import { CacheType } from "./interface/ens.cache";
 import { EnsMetadata } from "./ens.types";
 import { ENS_ENDPOINTS } from "../docs/ens.endpoints";
 import { ApiTags } from "@nestjs/swagger";
+import { type Address } from "viem";
+import { isEthereumAddress } from "class-validator";
 
 @ApiTags("ENS")
 @Controller("/api/v1/resolve/ens")
@@ -84,15 +86,30 @@ export class EnsResolveController {
     }
 
 
-    @Post("/reverse/:address")
-    public async reverseResolve() {
-
-    }
-
-
     @Post("/reverse/bulk")
+    @ENS_ENDPOINTS.bulkReverseResolve.operation
+    @ENS_ENDPOINTS.bulkReverseResolve.tags
+    @ENS_ENDPOINTS.bulkReverseResolve.body
+    @ENS_ENDPOINTS.bulkReverseResolve.response
+    @ENS_ENDPOINTS.bulkReverseResolve.response400
     public async bulkReverseResolve(@Body() request: BulkReverseResolveRequest) {
         return this.ensResolver.bulkReverseResolve(request);
     }
 
+    @Post("/reverse/single/:address")
+    @ENS_ENDPOINTS.reverseResolve.operation
+    @ENS_ENDPOINTS.reverseResolve.tags
+    @ENS_ENDPOINTS.reverseResolve.param
+    @ENS_ENDPOINTS.reverseResolve.response
+    @ENS_ENDPOINTS.reverseResolve.response400
+    public async reverseResolve(@Param("address") address: Address) {
+
+        if (!isEthereumAddress(address)) {
+            throw new BadRequestException("Invalid address")
+        }
+
+        return this.ensResolver.bulkReverseResolve({
+            addresses: [address]
+        })
+    }
 }

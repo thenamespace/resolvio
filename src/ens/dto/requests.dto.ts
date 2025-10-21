@@ -70,21 +70,19 @@ export class EnsTextsRequest extends NoCache {
   keys?: string[];
 }
 
-export class BulkReverseResolveRequest {
+export class BulkReverseResolveRequest extends NoCache {
+  @ApiProperty({
+    description: 'Array of Ethereum addresses to reverse resolve',
+    type: [String],
+    example: [
+      '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045',
+      '0x225f137127d9067788314bc7fcc1f36746a3c3B5',
+    ],
+  })
   @IsArray()
   @IsEthereumAddress({ each: true })
-  address: Address[];
-  @IsOptional()
-  @IsNumber()
-  chain_id?: number;
-}
-
-export class ReverseResolveResult {
-  name?: string;
-  hasReverseRecord: boolean;
-  address: Address;
-}
-
-export class BulkReverseResolveResult {
-  result: ReverseResolveResult[];
+  addresses: Address[];
+  // @IsOptional()
+  // @IsNumber()
+  // chain_id?: number;
 }

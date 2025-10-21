@@ -4,13 +4,14 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { IResolverService } from '../resolver';
-import { http } from 'viem';
-import { mainnet } from 'viem/chains';
+import { Address, encodeFunctionData, Hash, http } from 'viem';
+import { base, mainnet } from 'viem/chains';
 import { createEnsPublicClient } from '@ensdomains/ensjs';
 import { InMemoryEnsCache } from './in-memory-ens.cache';
 import { CacheType, EnsCache } from './interface/ens.cache';
 import {
   AVATAR_TEXT,
+  convertEVMChainIdToCoinType,
   DESCRIPTION_TEXT,
   DISCORD_TEXT,
   EMAIL_TEXT,
@@ -22,7 +23,12 @@ import {
   URL_TEXT,
 } from './ens.utils';
 import { EnsAddressRecord, EnsProfile, EnsTextRecord } from './ens.types';
-import { EnsAddressesResponse, EnsTextsResponse } from './dto/response.dto';
+import {
+  BulkReverseResolveResult,
+  EnsAddressesResponse,
+  EnsTextsResponse,
+  ReverseResolveResult,
+} from './dto/response.dto';
 import {
   ResolveNameRequest,
   ResolveNameResponse,
@@ -30,11 +36,13 @@ import {
 import { EthClients } from 'src/web3/eth.clients';
 import { NameProtocol } from 'src/resolver/types/protocol';
 import { Blockchains, getBlockchainByChainId } from './coins';
+import { BulkReverseResolveRequest } from './dto/requests.dto';
 import {
-  BulkReverseResolveRequest,
-  BulkReverseResolveResult,
-  ReverseResolveResult,
-} from './dto/requests.dto';
+  UNIVERSAL_RESOLVER_ABI,
+  UNIVERSAL_RESOLVER_ADDRESS,
+} from 'src/web3/constants';
+
+const ETH_COIN = 60;
 
 // Default addresses to resolve
 // if the addresses parameter is not provided
@@ -79,24 +87,84 @@ export class EnsResolver implements IResolverService {
     this.ensCache = this._ensCache;
   }
 
+  public async reverseResolve(address: Address) {
+
+  }
+
   public async bulkReverseResolve(
     request: BulkReverseResolveRequest,
   ): Promise<BulkReverseResolveResult> {
-    const calls: any[] = [];
     const items: ReverseResolveResult[] = [];
 
-    if (!request.address || request.address.length === 0) {
+    if (!request.addresses || request.addresses.length === 0) {
       return {
         result: items,
       };
     }
 
-    for (const a of request.address) {
-      calls.push({});
+    // Make sure there are no duplicates
+    let addressMap: Record<Address, boolean> = {}
+    request.addresses.forEach(addr => {
+      addressMap[addr.toLocaleLowerCase()] = true;
+    })
+
+    let result: ReverseResolveResult[] = [];
+    let addressesToResolve = Object.keys(addressMap) as Address[];
+
+    // We will add additional support for multichain reverse resolution
+    // const coin_type = request.chain_id || convertEVMChainIdToCoinType(base.id)
+    const coin_type = ETH_COIN;
+
+    if (!request.noCache) {
+      for (const a of request.addresses) {
+        const cachedValue = this.ensCache.getPrimaryName(a, coin_type);
+        if (cachedValue) {
+          result.push(cachedValue);
+          addressesToResolve = addressesToResolve.filter(
+            (addr) =>
+              addr.toLocaleLowerCase() !==
+              cachedValue.address.toLocaleLowerCase(),
+          );
+        }
+      }
+    }
+
+    if (addressesToResolve.length > 0) {
+      const calls: any[] = [];
+      const web3 = this.ethClients.getEthClient('mainnet');
+
+      for (const a of addressesToResolve) {
+        calls.push({
+          functionName: "reverse",
+          args: [a, coin_type],
+          address: UNIVERSAL_RESOLVER_ADDRESS,
+          abi: UNIVERSAL_RESOLVER_ABI
+        })
+      }
+       const resolverResult = await web3.multicall({contracts: calls, allowFailure: true});
+       
+       for (let i = 0; i < resolverResult.length; i++) {
+          const current = resolverResult[i]; 
+        if (current.result) {
+          const data = current.result as [string, string, string]
+          const [name] = data;
+
+           const finalResult: ReverseResolveResult = {
+            name: name,
+            hasReverseRecord: name !== undefined && name.length > 0,
+            address: addressesToResolve[i]
+           }
+           this.ensCache.setPrimaryName(finalResult, coin_type);
+           result.push(finalResult);
+         } else {
+          // CHECK IF THE CCIP ERROR HERE AND RESOLVE
+          console.log(current)
+         }
+       }
     }
 
     return {
-      result: items,
+      result: result,
     };
   }
 
