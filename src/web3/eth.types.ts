@@ -1,1 +1,1 @@
-export type EthChain = "nainnet" | "base" | "optimism"
+export type EthChain = "mainnet" | "base" | "optimism"

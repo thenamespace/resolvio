@@ -1,5 +1,6 @@
-import { ApiOperation, ApiParam, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ApiOperation, ApiParam, ApiQuery, ApiResponse, ApiTags, ApiBody } from '@nestjs/swagger';
 import { EnsProfile, EnsAddressRecord, EnsTextRecord, EnsMetadata } from '../ens/ens.types';
+import { BulkReverseResolveResult, ReverseResolveResult } from '../ens/dto/response.dto';
 
 export const ENS_ENDPOINTS = {
   // Profile endpoint
@@ -203,6 +204,71 @@ export const ENS_ENDPOINTS = {
     response400: ApiResponse({
       status: 400,
       description: 'Invalid ENS name format'
+    })
+  },
+
+  // Bulk reverse resolve endpoint
+  bulkReverseResolve: {
+    operation: ApiOperation({
+      summary: 'Bulk Reverse Resolve',
+      description: 'Resolve multiple Ethereum addresses to their primary ENS names in a single request'
+    }),
+    tags: ApiTags('ENS'),
+    body: ApiBody({
+      description: 'Request containing array of addresses to reverse resolve',
+      schema: {
+        type: 'object',
+        properties: {
+          addresses: {
+            type: 'array',
+            items: {
+              type: 'string'
+            },
+            example: [
+              '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045',
+              '0x225f137127d9067788314bc7fcc1f36746a3c3B5'
+            ]
+          },
+          noCache: {
+            type: 'boolean',
+            description: 'Skip cache and fetch fresh data',
+            default: false
+          }
+        },
+        required: ['addresses']
+      }
+    }),
+    response: ApiResponse({
+      status: 200,
+      description: 'Bulk reverse resolution completed successfully',
+      type: BulkReverseResolveResult
+    }),
+    response400: ApiResponse({
+      status: 400,
+      description: 'Invalid address format or empty address array'
+    })
+  },
+
+  // Single reverse resolve endpoint
+  reverseResolve: {
+    operation: ApiOperation({
+      summary: 'Reverse Resolve Single Address',
+      description: 'Resolve a single Ethereum address to its primary ENS name'
+    }),
+    tags: ApiTags('ENS'),
+    param: ApiParam({
+      name: 'address',
+      description: 'Ethereum address (e.g., "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045")',
+      example: '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045'
+    }),
+    response: ApiResponse({
+      status: 200,
+      description: 'Reverse resolution completed successfully',
+      type: BulkReverseResolveResult
+    }),
+    response400: ApiResponse({
+      status: 400,
+      description: 'Invalid Ethereum address format'
     })
   }
 }; 
