@@ -1,6 +1,13 @@
-import { parseAbi } from "viem"
+import { parseAbi } from 'viem';
 
-export const UNIVERSAL_RESOLVER_ADDRESS = "0xaBd80E8a13596fEeA40Fd26fD6a24c3fe76F05fB"
+export const UNIVERSAL_RESOLVER_ADDRESS =
+  '0xeEeEEEeE14D718C2B47D9923Deab1335E144EeEe';
+
+export const BATCH_GATEWAY_ABI = parseAbi([
+  'struct Request {address sender; bytes[] urls; bytes data;}',
+  'function query(Request[] requests) external returns (bool[] memory failures, bytes[] memory responses)',
+]);
+
 export const UNIVERSAL_RESOLVER_ABI = parseAbi([
   'error ResolverNotFound(bytes name)',
   'error ResolverNotContract(bytes name, address resolver)',
@@ -9,6 +16,8 @@ export const UNIVERSAL_RESOLVER_ABI = parseAbi([
   'error ReverseAddressMismatch(string primary, bytes primaryAddress)',
   'error HttpError(uint16 status, string message)',
   'error OffchainLookup(address sender, string[] urls, bytes callData, bytes4 callbackFunction, bytes extraData)',
+  'struct Request {address sender; string[] urls; bytes data;}',
+  'function query(Request[] requests) external view returns (bool[] memory failures, bytes[] memory responses)',
   'function resolve(bytes name, bytes data) view returns (bytes result, address resolver)',
   'function reverse(bytes lookupAddress, uint256 coinType) view returns (string primary, address resolver, address reverseResolver)',
-])
+]);

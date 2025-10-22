@@ -4,7 +4,15 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { IResolverService } from '../resolver';
-import { Address, encodeFunctionData, Hash, http } from 'viem';
+import {
+  Address,
+  ContractFunctionExecutionError,
+  ContractFunctionRevertedError,
+  encodeFunctionData,
+  getContract,
+  Hash,
+  http,
+} from 'viem';
 import { base, mainnet } from 'viem/chains';
 import { createEnsPublicClient } from '@ensdomains/ensjs';
 import { InMemoryEnsCache } from './in-memory-ens.cache';
@@ -15,14 +23,21 @@ import {
   DESCRIPTION_TEXT,
   DISCORD_TEXT,
   EMAIL_TEXT,
+  extractOffchainLookupData,
   GITHUB_TEXT,
   HEADER_TEXT,
+  isOffchainLookupErr,
   NAME_TEXT,
   TELEGRAM_TEXT,
   TWITTER_TEXT,
   URL_TEXT,
 } from './ens.utils';
-import { EnsAddressRecord, EnsProfile, EnsTextRecord } from './ens.types';
+import {
+  EnsAddressRecord,
+  EnsProfile,
+  EnsTextRecord,
+  OffchainLookupParams,
+} from './ens.types';
 import {
   BulkReverseResolveResult,
   EnsAddressesResponse,
@@ -38,9 +53,12 @@ import { NameProtocol } from 'src/resolver/types/protocol';
 import { Blockchains, getBlockchainByChainId } from './coins';
 import { BulkReverseResolveRequest } from './dto/requests.dto';
 import {
+  BATCH_GATEWAY_ABI,
   UNIVERSAL_RESOLVER_ABI,
   UNIVERSAL_RESOLVER_ADDRESS,
 } from 'src/web3/constants';
+import { batch, getName } from '@ensdomains/ensjs/public';
+import { getEnsName } from 'viem/actions';
 
 const ETH_COIN = 60;
 
@@ -87,9 +105,7 @@ export class EnsResolver implements IResolverService {
     this.ensCache = this._ensCache;
   }
 
-  public async reverseResolve(address: Address) {
-
-  }
+  public async reverseResolve(address: Address) {}
 
   public async bulkReverseResolve(
     request: BulkReverseResolveRequest,
@@ -102,11 +118,17 @@ export class EnsResolver implements IResolverService {
       };
     }
 
+    if (request.addresses.length > 20) {
+      throw new BadRequestException(
+        `Maximum 20 addresses can be reverse resolved per request`,
+      );
+    }
+
     // Make sure there are no duplicates
-    let addressMap: Record<Address, boolean> = {}
-    request.addresses.forEach(addr => {
+    let addressMap: Record<Address, boolean> = {};
+    request.addresses.forEach((addr) => {
       addressMap[addr.toLocaleLowerCase()] = true;
-    })
+    });
 
     let result: ReverseResolveResult[] = [];
     let addressesToResolve = Object.keys(addressMap) as Address[];
@@ -129,38 +151,105 @@ export class EnsResolver implements IResolverService {
       }
     }
 
-    if (addressesToResolve.length > 0) {
-      const calls: any[] = [];
-      const web3 = this.ethClients.getEthClient('mainnet');
+    // We only serve cashed
+    if (addressesToResolve.length === 0) {
+      return {
+        result: result,
+      };
+    }
 
-      for (const a of addressesToResolve) {
-        calls.push({
-          functionName: "reverse",
-          args: [a, coin_type],
-          address: UNIVERSAL_RESOLVER_ADDRESS,
-          abi: UNIVERSAL_RESOLVER_ABI
-        })
+    const calls: any[] = [];
+    const web3 = this.ethClients.getEthClient('mainnet');
+    const offchainLookups: OffchainLookupParams[] = [];
+    const callPromises: Promise<any>[] = [];
+
+    const universalResolver = getContract({
+      abi: UNIVERSAL_RESOLVER_ABI,
+      address: UNIVERSAL_RESOLVER_ADDRESS,
+      client: web3,
+    });
+
+    addressesToResolve.forEach((addr) => {
+      callPromises.push(universalResolver.read.reverse([addr, BigInt(coin_type)]))
+      // callPromises.push(getContract({ abi: UNIVERSAL_RESOLVER_ABI, address: UNIVERSAL_RESOLVER_ADDRESS, }))
+    });
+
+    const callRes = await Promise.all(callPromises);
+
+    console.log(callRes);
+
+    if (true) {
+      return {
+        result: items
       }
-       const resolverResult = await web3.multicall({contracts: calls, allowFailure: true});
-       
-       for (let i = 0; i < resolverResult.length; i++) {
-          const current = resolverResult[i]; 
-        if (current.result) {
-          const data = current.result as [string, string, string]
-          const [name] = data;
+    }
 
-           const finalResult: ReverseResolveResult = {
-            name: name,
-            hasReverseRecord: name !== undefined && name.length > 0,
-            address: addressesToResolve[i]
-           }
-           this.ensCache.setPrimaryName(finalResult, coin_type);
-           result.push(finalResult);
-         } else {
-          // CHECK IF THE CCIP ERROR HERE AND RESOLVE
-          console.log(current)
-         }
-       }
+    // Try to resolve onchain
+    // calling universal resolver bulk multicall
+    for (const a of addressesToResolve) {
+      calls.push({
+        functionName: 'reverse',
+        args: [a, coin_type],
+        address: UNIVERSAL_RESOLVER_ADDRESS,
+        abi: UNIVERSAL_RESOLVER_ABI,
+      });
+    }
+    const resolverResult = await web3.multicall({
+      contracts: calls,
+      allowFailure: true,
+    });
+
+    for (let i = 0; i < resolverResult.length; i++) {
+      const current = resolverResult[i];
+
+      if (current.result && current.status === 'success') {
+        const data = current.result as [string, string, string];
+        const [name] = data;
+
+        const finalResult: ReverseResolveResult = {
+          name: name,
+          hasReverseRecord: name !== undefined && name.length > 0,
+          address: addressesToResolve[i],
+        };
+        this.ensCache.setPrimaryName(finalResult, coin_type);
+        result.push(finalResult);
+      } else if (current.status === 'failure') {
+        const err = current.error! as any;
+
+        console.log(err.cause?.data, 'CAUSE');
+
+        if (err.cause && isOffchainLookupErr(err.cause)) {
+          const params = extractOffchainLookupData(err.cause);
+          offchainLookups.push(params);
+        } else {
+          console.log('NO OFFCHAIN LOOKUP');
+        }
+      }
+    }
+
+    if (offchainLookups.length > 0) {
+      console.log(offchainLookups, 'LOOKUPS');
+
+      const batchGatewayRequests: any[] = offchainLookups.map((lookupData) => {
+        return {
+          sender: lookupData.sender,
+          urls: lookupData.urls,
+          data: lookupData.calldata,
+        };
+      });
+
+      const batchResponse = await web3.readContract({
+        functionName: 'query',
+        abi: UNIVERSAL_RESOLVER_ABI,
+        address: UNIVERSAL_RESOLVER_ADDRESS,
+        args: [batchGatewayRequests],
+      });
+
+      console.log(batchResponse, 'RESPONSE!!');
+
+      // const response = await web3.readContract({
+      //   functionName: ""
+      // })
     }
 
     return {
