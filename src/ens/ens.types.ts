@@ -1,5 +1,5 @@
 import { AddressRecord, TextRecord } from "src/types/ens-utils.dto";
-import type { Address } from "viem";
+import type { Address, Hash } from "viem";
 import { ApiProperty } from "@nestjs/swagger";
 
 export class EnsProfile {
@@ -103,4 +103,12 @@ export class EnsMetadata {
         example: 1735689600
     })
     expiry: number
+}
+
+export interface OffchainLookupParams {
+    sender: Address
+    urls: string[]
+    calldata: Hash
+    extraData: Hash
+    callbackSignature: Hash
 }

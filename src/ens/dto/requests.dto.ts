@@ -82,7 +82,7 @@ export class BulkReverseResolveRequest extends NoCache {
   @IsArray()
   @IsEthereumAddress({ each: true })
   addresses: Address[];
-  // @IsOptional()
-  // @IsNumber()
-  // chain_id?: number;
+  @IsOptional()
+  @IsNumber()
+  chain_id?: number;
 }

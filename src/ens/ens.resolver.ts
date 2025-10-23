@@ -4,7 +4,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { IResolverService } from '../resolver';
-import { Address, encodeFunctionData, Hash, http } from 'viem';
+import { Address, http, toCoinType } from 'viem';
 import { base, mainnet } from 'viem/chains';
 import { createEnsPublicClient } from '@ensdomains/ensjs';
 import { InMemoryEnsCache } from './in-memory-ens.cache';
@@ -15,14 +15,21 @@ import {
   DESCRIPTION_TEXT,
   DISCORD_TEXT,
   EMAIL_TEXT,
+  extractOffchainLookupData,
   GITHUB_TEXT,
   HEADER_TEXT,
+  isOffchainLookupErr,
   NAME_TEXT,
   TELEGRAM_TEXT,
   TWITTER_TEXT,
   URL_TEXT,
 } from './ens.utils';
-import { EnsAddressRecord, EnsProfile, EnsTextRecord } from './ens.types';
+import {
+  EnsAddressRecord,
+  EnsProfile,
+  EnsTextRecord,
+  OffchainLookupParams,
+} from './ens.types';
 import {
   BulkReverseResolveResult,
   EnsAddressesResponse,
@@ -38,9 +45,12 @@ import { NameProtocol } from 'src/resolver/types/protocol';
 import { Blockchains, getBlockchainByChainId } from './coins';
 import { BulkReverseResolveRequest } from './dto/requests.dto';
 import {
+  SUPPORTED_REVERSE_REGISTRAR_CHAINS,
   UNIVERSAL_RESOLVER_ABI,
   UNIVERSAL_RESOLVER_ADDRESS,
 } from 'src/web3/constants';
+import { batch, getName, GetNameReturnType } from '@ensdomains/ensjs/public';
+import { multicall } from 'viem/actions';
 
 const ETH_COIN = 60;
 
@@ -82,13 +92,19 @@ export class EnsResolver implements IResolverService {
     const mainnetRpc = this.ethClients.getMainnetRpcUrl();
     this.ensClient = createEnsPublicClient({
       transport: http(mainnetRpc),
+      //@ts-ignore
       chain: mainnet,
     });
     this.ensCache = this._ensCache;
   }
 
-  public async reverseResolve(address: Address) {
-
+  public async reverseResolve(
+    address: Address,
+  ): Promise<BulkReverseResolveResult> {
+    return this.bulkReverseResolve({
+      addresses: [address],
+      noCache: false,
+    });
   }
 
   public async bulkReverseResolve(
@@ -102,18 +118,30 @@ export class EnsResolver implements IResolverService {
       };
     }
 
+    if (request.addresses.length > 20) {
+      throw new BadRequestException(
+        `Maximum 20 addresses can be reverse resolved per request`,
+      );
+    }
+
     // Make sure there are no duplicates
-    let addressMap: Record<Address, boolean> = {}
-    request.addresses.forEach(addr => {
+    let addressMap: Record<Address, boolean> = {};
+    request.addresses.forEach((addr) => {
       addressMap[addr.toLocaleLowerCase()] = true;
-    })
+    });
 
     let result: ReverseResolveResult[] = [];
     let addressesToResolve = Object.keys(addressMap) as Address[];
 
+    if (request.chain_id) {
+      this.ensureSupportedReverseChainId(request.chain_id);
+    }
+
     // We will add additional support for multichain reverse resolution
-    // const coin_type = request.chain_id || convertEVMChainIdToCoinType(base.id)
-    const coin_type = ETH_COIN;
+    let coin_type = ETH_COIN;
+    if (request.chain_id && request.chain_id !== 1) {
+      coin_type = Number(toCoinType(request.chain_id));
+    }
 
     if (!request.noCache) {
       for (const a of request.addresses) {
@@ -129,42 +157,42 @@ export class EnsResolver implements IResolverService {
       }
     }
 
-    if (addressesToResolve.length > 0) {
-      const calls: any[] = [];
-      const web3 = this.ethClients.getEthClient('mainnet');
+    // We only serve cashed if all addresses are found in cache
+    if (addressesToResolve.length === 0) {
+      return {
+        result: result,
+      };
+    }
 
-      for (const a of addressesToResolve) {
-        calls.push({
-          functionName: "reverse",
-          args: [a, coin_type],
-          address: UNIVERSAL_RESOLVER_ADDRESS,
-          abi: UNIVERSAL_RESOLVER_ABI
-        })
-      }
-       const resolverResult = await web3.multicall({contracts: calls, allowFailure: true});
-       
-       for (let i = 0; i < resolverResult.length; i++) {
-          const current = resolverResult[i]; 
-        if (current.result) {
-          const data = current.result as [string, string, string]
-          const [name] = data;
+    const getNameBatch: any[] = [];
 
-           const finalResult: ReverseResolveResult = {
-            name: name,
-            hasReverseRecord: name !== undefined && name.length > 0,
-            address: addressesToResolve[i]
-           }
-           this.ensCache.setPrimaryName(finalResult, coin_type);
-           result.push(finalResult);
-         } else {
-          // CHECK IF THE CCIP ERROR HERE AND RESOLVE
-          console.log(current)
-         }
-       }
+    for (let i = 0; i < addressesToResolve.length; i++) {
+      const currentAddr = addressesToResolve[i];
+      getNameBatch.push(
+        getName.batch({ coinType: coin_type, address: currentAddr }),
+      );
+    }
+
+    const getNamesResponse = (await batch(
+      this.ensClient!,
+      ...getNameBatch,
+    )) as GetNameReturnType[];
+
+    for (let i = 0; i < getNamesResponse.length; i++) {
+      let current = getNamesResponse[i];
+      let address = addressesToResolve[i];
+
+      const resolvedName: ReverseResolveResult = {
+        address,
+        name: current?.name || "", 
+        hasReverseRecord: current?.match || false,
+      };
+      this.ensCache.setPrimaryName(resolvedName, coin_type);
+      items.push(resolvedName);
     }
 
     return {
-      result: result,
+      result: items,
     };
   }
 
@@ -290,10 +318,6 @@ export class EnsResolver implements IResolverService {
     return profile;
   }
 
-  public async resolveText(name: string, key: string): Promise<string> {
-    return '';
-  }
-
   public async resolveTexts(
     name: string,
     keys: string[] = [],
@@ -362,13 +386,11 @@ export class EnsResolver implements IResolverService {
     };
   }
 
-  public async getNameMetadata() {}
-
-  private async getNameOwnership() {}
-
-  private async getExpiry() {}
-
-  private async getL2Ownership(name: string, chainId: number) {}
-
-  private async isNamespaceL2Subname(name: string, resolver: string) {}
+  private ensureSupportedReverseChainId = (chain_id: number) => {
+    if (!SUPPORTED_REVERSE_REGISTRAR_CHAINS.includes(chain_id)) {
+      throw new BadRequestException(
+        `Unsupported reverse chain id: ${chain_id}, supported: ${SUPPORTED_REVERSE_REGISTRAR_CHAINS}`,
+      );
+    }
+  };
 }

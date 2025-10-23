@@ -4,11 +4,9 @@ import { BulkReverseResolveRequest, EnsAddressesRequest, EnsNameRequest, EnsText
 import { CacheType } from "./interface/ens.cache";
 import { EnsMetadata } from "./ens.types";
 import { ENS_ENDPOINTS } from "../docs/ens.endpoints";
-import { ApiTags } from "@nestjs/swagger";
 import { type Address } from "viem";
 import { isEthereumAddress } from "class-validator";
 
-@ApiTags("ENS")
 @Controller("/api/v1/resolve/ens")
 export class EnsResolveController {
 

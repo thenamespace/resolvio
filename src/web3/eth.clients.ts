@@ -26,7 +26,10 @@ export class EthClients {
 
         const mainnetClient = createPublicClient({
             chain: mainnet,
-            transport: http(this.generateAlchemyUri(alchemy_token, "eth-mainnet"))
+            transport: http(this.generateAlchemyUri(alchemy_token, "eth-mainnet")),
+            batch: {
+                multicall: true
+            }
         })
 
         this.clients = {
