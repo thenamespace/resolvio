@@ -4,15 +4,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { IResolverService } from '../resolver';
-import {
-  Address,
-  ContractFunctionExecutionError,
-  ContractFunctionRevertedError,
-  encodeFunctionData,
-  getContract,
-  Hash,
-  http,
-} from 'viem';
+import { Address, http, toCoinType } from 'viem';
 import { base, mainnet } from 'viem/chains';
 import { createEnsPublicClient } from '@ensdomains/ensjs';
 import { InMemoryEnsCache } from './in-memory-ens.cache';
@@ -53,12 +45,12 @@ import { NameProtocol } from 'src/resolver/types/protocol';
 import { Blockchains, getBlockchainByChainId } from './coins';
 import { BulkReverseResolveRequest } from './dto/requests.dto';
 import {
-  BATCH_GATEWAY_ABI,
+  SUPPORTED_REVERSE_REGISTRAR_CHAINS,
   UNIVERSAL_RESOLVER_ABI,
   UNIVERSAL_RESOLVER_ADDRESS,
 } from 'src/web3/constants';
-import { batch, getName } from '@ensdomains/ensjs/public';
-import { getEnsName } from 'viem/actions';
+import { batch, getName, GetNameReturnType } from '@ensdomains/ensjs/public';
+import { multicall } from 'viem/actions';
 
 const ETH_COIN = 60;
 
@@ -100,12 +92,20 @@ export class EnsResolver implements IResolverService {
     const mainnetRpc = this.ethClients.getMainnetRpcUrl();
     this.ensClient = createEnsPublicClient({
       transport: http(mainnetRpc),
+      //@ts-ignore
       chain: mainnet,
     });
     this.ensCache = this._ensCache;
   }
 
-  public async reverseResolve(address: Address) {}
+  public async reverseResolve(
+    address: Address,
+  ): Promise<BulkReverseResolveResult> {
+    return this.bulkReverseResolve({
+      addresses: [address],
+      noCache: false,
+    });
+  }
 
   public async bulkReverseResolve(
     request: BulkReverseResolveRequest,
@@ -133,9 +133,15 @@ export class EnsResolver implements IResolverService {
     let result: ReverseResolveResult[] = [];
     let addressesToResolve = Object.keys(addressMap) as Address[];
 
+    if (request.chain_id) {
+      this.ensureSupportedReverseChainId(request.chain_id);
+    }
+
     // We will add additional support for multichain reverse resolution
-    // const coin_type = request.chain_id || convertEVMChainIdToCoinType(base.id)
-    const coin_type = ETH_COIN;
+    let coin_type = ETH_COIN;
+    if (request.chain_id && request.chain_id !== 1) {
+      coin_type = Number(toCoinType(request.chain_id));
+    }
 
     if (!request.noCache) {
       for (const a of request.addresses) {
@@ -151,109 +157,42 @@ export class EnsResolver implements IResolverService {
       }
     }
 
-    // We only serve cashed
+    // We only serve cashed if all addresses are found in cache
     if (addressesToResolve.length === 0) {
       return {
         result: result,
       };
     }
 
-    const calls: any[] = [];
-    const web3 = this.ethClients.getEthClient('mainnet');
-    const offchainLookups: OffchainLookupParams[] = [];
-    const callPromises: Promise<any>[] = [];
+    const getNameBatch: any[] = [];
 
-    const universalResolver = getContract({
-      abi: UNIVERSAL_RESOLVER_ABI,
-      address: UNIVERSAL_RESOLVER_ADDRESS,
-      client: web3,
-    });
-
-    addressesToResolve.forEach((addr) => {
-      callPromises.push(universalResolver.read.reverse([addr, BigInt(coin_type)]))
-      // callPromises.push(getContract({ abi: UNIVERSAL_RESOLVER_ABI, address: UNIVERSAL_RESOLVER_ADDRESS, }))
-    });
-
-    const callRes = await Promise.all(callPromises);
-
-    console.log(callRes);
-
-    if (true) {
-      return {
-        result: items
-      }
+    for (let i = 0; i < addressesToResolve.length; i++) {
+      const currentAddr = addressesToResolve[i];
+      getNameBatch.push(
+        getName.batch({ coinType: coin_type, address: currentAddr }),
+      );
     }
 
-    // Try to resolve onchain
-    // calling universal resolver bulk multicall
-    for (const a of addressesToResolve) {
-      calls.push({
-        functionName: 'reverse',
-        args: [a, coin_type],
-        address: UNIVERSAL_RESOLVER_ADDRESS,
-        abi: UNIVERSAL_RESOLVER_ABI,
-      });
-    }
-    const resolverResult = await web3.multicall({
-      contracts: calls,
-      allowFailure: true,
-    });
+    const getNamesResponse = (await batch(
+      this.ensClient!,
+      ...getNameBatch,
+    )) as GetNameReturnType[];
 
-    for (let i = 0; i < resolverResult.length; i++) {
-      const current = resolverResult[i];
+    for (let i = 0; i < getNamesResponse.length; i++) {
+      let current = getNamesResponse[i];
+      let address = addressesToResolve[i];
 
-      if (current.result && current.status === 'success') {
-        const data = current.result as [string, string, string];
-        const [name] = data;
-
-        const finalResult: ReverseResolveResult = {
-          name: name,
-          hasReverseRecord: name !== undefined && name.length > 0,
-          address: addressesToResolve[i],
-        };
-        this.ensCache.setPrimaryName(finalResult, coin_type);
-        result.push(finalResult);
-      } else if (current.status === 'failure') {
-        const err = current.error! as any;
-
-        console.log(err.cause?.data, 'CAUSE');
-
-        if (err.cause && isOffchainLookupErr(err.cause)) {
-          const params = extractOffchainLookupData(err.cause);
-          offchainLookups.push(params);
-        } else {
-          console.log('NO OFFCHAIN LOOKUP');
-        }
-      }
-    }
-
-    if (offchainLookups.length > 0) {
-      console.log(offchainLookups, 'LOOKUPS');
-
-      const batchGatewayRequests: any[] = offchainLookups.map((lookupData) => {
-        return {
-          sender: lookupData.sender,
-          urls: lookupData.urls,
-          data: lookupData.calldata,
-        };
-      });
-
-      const batchResponse = await web3.readContract({
-        functionName: 'query',
-        abi: UNIVERSAL_RESOLVER_ABI,
-        address: UNIVERSAL_RESOLVER_ADDRESS,
-        args: [batchGatewayRequests],
-      });
-
-      console.log(batchResponse, 'RESPONSE!!');
-
-      // const response = await web3.readContract({
-      //   functionName: ""
-      // })
+      const resolvedName: ReverseResolveResult = {
+        address,
+        name: current?.name || "", 
+        hasReverseRecord: current?.match || false,
+      };
+      this.ensCache.setPrimaryName(resolvedName, coin_type);
+      items.push(resolvedName);
     }
 
     return {
-      result: result,
+      result: items,
     };
   }
 
@@ -379,10 +318,6 @@ export class EnsResolver implements IResolverService {
     return profile;
   }
 
-  public async resolveText(name: string, key: string): Promise<string> {
-    return '';
-  }
-
   public async resolveTexts(
     name: string,
     keys: string[] = [],
@@ -451,13 +386,11 @@ export class EnsResolver implements IResolverService {
     };
   }
 
-  public async getNameMetadata() {}
-
-  private async getNameOwnership() {}
-
-  private async getExpiry() {}
-
-  private async getL2Ownership(name: string, chainId: number) {}
-
-  private async isNamespaceL2Subname(name: string, resolver: string) {}
+  private ensureSupportedReverseChainId = (chain_id: number) => {
+    if (!SUPPORTED_REVERSE_REGISTRAR_CHAINS.includes(chain_id)) {
+      throw new BadRequestException(
+        `Unsupported reverse chain id: ${chain_id}, supported: ${SUPPORTED_REVERSE_REGISTRAR_CHAINS}`,
+      );
+    }
+  };
 }

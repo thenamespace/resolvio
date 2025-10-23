@@ -1,4 +1,14 @@
 import { parseAbi } from 'viem';
+import { arbitrum, base, linea, mainnet, optimism, scroll } from 'viem/chains';
+
+export const SUPPORTED_REVERSE_REGISTRAR_CHAINS: number[] = [
+  mainnet.id,
+  optimism.id,
+  base.id,
+  arbitrum.id,
+  linea.id,
+  scroll.id
+]
 
 export const UNIVERSAL_RESOLVER_ADDRESS =
   '0xeEeEEEeE14D718C2B47D9923Deab1335E144EeEe';

@@ -1,7 +1,6 @@
 import { AddressRecord, TextRecord } from "src/types/ens-utils.dto";
-import type { Address } from "viem";
+import type { Address, Hash } from "viem";
 import { ApiProperty } from "@nestjs/swagger";
-import { Hash } from "crypto";
 
 export class EnsProfile {
     @ApiProperty({

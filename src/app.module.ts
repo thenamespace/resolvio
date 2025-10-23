@@ -13,7 +13,7 @@ import { join } from 'path';
     }),
     ServeStaticModule.forRoot({
       rootPath: join(__dirname, '..', 'public'),
-      exclude: ['/api'], // Exclude API routes from static file serving
+      exclude: ['/api', '/ens'], // Exclude API routes from static file serving
     }),
     ENSModule, 
     ResolverModule

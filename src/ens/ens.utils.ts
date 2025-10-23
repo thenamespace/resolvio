@@ -30,15 +30,15 @@ export const GITHUB_TEXT = 'com.github';
 const OFFCHAIN_LOOKUP = 'OffchainLookup';
 
 export function isOffchainLookupErr(err: any): boolean {
-  if (!err || !err.data) {
+  if (!err || !err.cause || !err.cause.data) {
     return false;
   }
-  const { errorName } = err.data;
+  const { errorName } = err.cause.data;
   return errorName === OFFCHAIN_LOOKUP;
 }
 
 export function extractOffchainLookupData(err: any): OffchainLookupParams {
-  const { args } = err.data;
+  const { args } = err.cause.data;
   const [sender, urls, calldata, callbackSignature, extraData] = args;
 
   return {
