@@ -112,3 +112,8 @@ export interface OffchainLookupParams {
     extraData: Hash
     callbackSignature: Hash
 }
+
+export class ReverseResolveRequest {
+    addresses: Address[]
+    chainId?: number
+}
