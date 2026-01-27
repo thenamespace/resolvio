@@ -3,6 +3,7 @@ import { EthChain } from "./eth.types";
 import { base, mainnet, optimism } from "viem/chains";
 import { Injectable } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
+import { addEnsContracts, createEnsPublicClient, EnsPublicClient } from "@ensdomains/ensjs";
 
 export type EthClient = ReturnType<typeof createPublicClient>
 
@@ -10,6 +11,7 @@ export type EthClient = ReturnType<typeof createPublicClient>
 export class EthClients {
 
     private clients: Partial<Record<EthChain, EthClient>> = {}
+    private ensjsClient: EthClient
 
     constructor(private config: ConfigService) {
 
@@ -39,6 +41,18 @@ export class EthClients {
             // @ts-ignore
             base: baseClient
         }
+
+        this.ensjsClient = createPublicClient({
+            transport: http(this.getMainnetRpcUrl()),
+            chain: addEnsContracts(mainnet),
+            batch: {
+                multicall: true,
+            }
+        })
+    }
+
+    public getEnsClient(): EthClient {
+        return this.ensjsClient;
     }
 
     public getEthClient(chain: EthChain): EthClient {
