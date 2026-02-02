@@ -1,11 +1,9 @@
 import { DocumentBuilder } from '@nestjs/swagger';
 
 export const swaggerConfig = new DocumentBuilder()
-  .setTitle('Universal Resolution Service API')
-  .setDescription(
-    'A unified API for resolving names across multiple naming systems and protocols. This service provides a single interface for ENS resolution with plans to extend support to other naming systems.',
-  )
-  .setVersion('1.0.0')
+  .setTitle('Resolvio API')
+  .setDescription('ENS Resolution Service - Resolve ENS names, addresses, profiles and bulk reverse resolve')
+  .setVersion('1.0')
   .setContact(
     'Development Team',
     'https://namespace.ninja',

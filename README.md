@@ -1,71 +1,224 @@
-# Universal Resolutioon Service
+# Resolvio
 
 A simple-to-use resolution service built to unify all web3 naming services under one API for simple data fetching and resolution (built with [NestJS](https://nestjs.com/)).
 
+**Production**: https://resolvio.namespace.ninja/  
+**API Docs**: https://resolvio.namespace.ninja/api/docs  
+**Documentation**: https://docs.namespace.ninja/api-reference/resolvio/
+
 ## Description
 
-This API is designed to be a universal resolution service that will support multiple naming systems and protocols. Initially, it supports **Ethereum Name Service (ENS)** resolution, with plans to extend support to other naming systems in the future that have proven their resilience in the real world, thoughtful protocol design, and demand and adoption by their ecosystem of apps and end users.
-
-The service provides a unified interface for resolving names across different protocols, making it easier for applications to handle various naming systems without implementing multiple integrations.
+Resolvio provides a comprehensive REST API for **Ethereum Name Service (ENS)** resolution. The service offers a unified interface for resolving ENS names, performing reverse lookups, and fetching profile data including addresses, text records, and contenthash.
 
 ## Features
 
-- **ENS Resolution**: Initial support for Ethereum Name Service
-- **Extensible Architecture**: Designed to easily add support for other naming systems
-- **RESTful API**: Clean, consistent API endpoints
-- **TypeScript**: Built with TypeScript for a better developer experience
-- **Testing**: Comprehensive test coverage with Jest
+- **ENS Resolution**: Complete support for Ethereum Name Service
+  - Forward resolution (name → address)
+  - Reverse resolution (address → name)
+  - Profile data (texts, addresses, contenthash)
+  - Multi-chain support (ETH, BTC, SOL, OP, Base, ARB)
+- **RESTful API**: Clean, consistent API endpoints with OpenAPI documentation
+- **TypeScript**: Built with TypeScript for type safety and better DX
+- **Caching**: In-memory caching for improved performance
+- **Docker Support**: Containerized deployment ready
 
-## Future Plans
+## Quick Start
 
-- DNS resolution support
-- Custom naming system plugins
-- Caching and performance optimizations
-- Rate limiting and security features
-- Handshake (HNS) resolution
-- Solana Name Service
-- Sui Name Service
+### Prerequisites
 
-## Project setup
+- Node.js 18+ and npm
+- Alchemy API key (for Ethereum RPC access)
+
+### Installation
 
 ```bash
-$ npm install
+# Clone the repository
+git clone <repository-url>
+cd universal-resolution-service
+
+# Install dependencies
+npm install
+
+# Configure environment variables
+cp .env.example .env
+# Edit .env with your configuration
 ```
 
-## Compile and run the project
+### Configuration
+
+Create a `.env` file in the project root:
 
 ```bash
-# development
-$ npm run start
+# Server port (default: 3000)
+PORT=3001
 
-# watch mode
-$ npm run start:dev
-
-# production mode
-$ npm run start:prod
-``` 
-
-## Run tests
-
-```bash
-# unit tests
-$ npm run test
-
-# e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
+# Alchemy API token for Ethereum RPC access
+# Get yours at: https://www.alchemy.com/
+ALCHEMY_TOKEN=your_alchemy_api_key_here
 ```
 
-## API Endpoints
+### Running the Service
 
-*Coming soon - API documentation will be added as features are implemented*
+```bash
+# Development mode with hot reload
+npm run start:dev
 
-## Contributing
+# Production mode
+npm run build
+npm run start:prod
 
-This project is in early development. Contributions and suggestions are welcome!
+# Using Docker
+docker build -t universal-resolution-service .
+docker run -p 3001:3001 --env-file .env universal-resolution-service
+```
+
+The API will be available at `http://localhost:3001`
+
+## API Documentation
+
+**Production**:
+- **Swagger UI**: https://resolvio.namespace.ninja/api/docs
+- **Documentation**: https://docs.namespace.ninja/api-reference/resolvio/
+- **OpenAPI JSON**: https://resolvio.namespace.ninja/api/openapi.json
+
+**Local Development**:
+- **Swagger UI**: http://localhost:3001/api/docs
+- **OpenAPI JSON**: http://localhost:3001/api/openapi.json
+
+### Quick API Examples
+
+#### Forward Resolution - Get ENS Profile
+
+```bash
+# Production
+curl https://resolvio.namespace.ninja/ens/v1/profile/vitalik.eth
+
+# Local
+curl http://localhost:3001/ens/v1/profile/vitalik.eth
+```
+
+Response:
+```json
+{
+  "name": "vitalik.eth",
+  "addresses": [
+    { "coin": 60, "name": "eth", "address": "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045" }
+  ],
+  "texts": [
+    { "key": "avatar", "value": "..." }
+  ],
+  "resolver": "0x..."
+}
+```
+
+#### Reverse Resolution - Address to Name
+
+```bash
+curl -X POST http://localhost:3001/ens/v1/reverse/bulk \
+  -H "Content-Type: application/json" \
+  -d '{"addresses": ["0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045"]}'
+```
+
+Response:
+```json
+{
+  "result": [
+    {
+      "address": "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045",
+      "name": "vitalik.eth",
+      "hasReverseRecord": true
+    }
+  ]
+}
+```
+
+#### Get Specific Text Records
+
+```bash
+curl "http://localhost:3001/ens/v1/texts/vitalik.eth?keys[]=avatar&keys[]=com.twitter"
+```
+
+#### Get Multi-Chain Addresses
+
+```bash
+curl "http://localhost:3001/ens/v1/addresses/vitalik.eth?coins[]=60&coins[]=0&coins[]=501"
+```
+
+## Architecture
+
+### Directory Structure
+
+```
+src/
+├── ens/                    # ENS-specific resolution logic
+│   ├── ens.controller.ts   # API endpoints
+│   ├── ens.resolver.ts     # Forward resolution service
+│   ├── ens-reverse.resolver.ts  # Reverse resolution service
+│   ├── in-memory-ens.cache.ts   # Caching layer
+│   └── dto/                # Data transfer objects
+├── resolver/               # Generic resolver interface
+├── web3/                   # Blockchain clients (viem, ensjs)
+├── docs/                   # API documentation configs
+└── main.ts                # Application entry point
+```
+
+### Key Components
+
+- **ENS Resolver**: Handles forward resolution using `@ensdomains/ensjs`
+- **Reverse Resolver**: Handles address-to-name resolution
+- **Cache Layer**: In-memory cache with 5-minute TTL
+- **Web3 Clients**: Viem-based clients for Ethereum, Base, Optimism
+- **Swagger Docs**: Auto-generated API documentation
+
+## Development
+
+### Running Tests
+
+```bash
+# Unit tests
+npm run test
+
+# E2E tests
+npm run test:e2e
+
+# Test coverage
+npm run test:cov
+```
+
+### Linting and Formatting
+
+```bash
+# Run linter
+npm run lint
+
+# Format code
+npm run format
+```
+
+### Building
+
+```bash
+# Build for production
+npm run build
+
+# Build with frontend (if applicable)
+npm run build:all
+```
+
+
+
+This project is in active development. Contributions and suggestions are welcome!
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
 
 ## License
 
 This project is licensed under the MIT License.
+
+## Support
+
+For issues, questions, or feature requests, please open an issue on GitHub.
