@@ -14,11 +14,11 @@ jobs:
       project_id: prod-9427
       region: europe-west3
       workload_identity_provider: projects/397196751430/locations/global/workloadIdentityPools/github-pool/providers/github-provider
-      app_name:  global-resolver
+      app_name: resolvio
       dockerfile: ./Dockerfile
   update-staging:
     needs: build-and-push
     uses: thenamespace/.github-private/.github/workflows/repository-dispatch-custom-app.yaml@main
     secrets: inherit
     with:
-      app_name:  global-resolver
+      app_name: resolvio
