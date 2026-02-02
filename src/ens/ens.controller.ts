@@ -112,7 +112,7 @@ export class EnsReverseResolutionController {
     return this.ensReverseResolver.resolve(request);
   }
 
-  @Post('/reverse/:address')
+  @Post('/reverse/single/:address')
   @ENS_ENDPOINTS.reverseResolve.operation
   @ENS_ENDPOINTS.reverseResolve.param
   @ENS_ENDPOINTS.reverseResolve.response
