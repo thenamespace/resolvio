@@ -3,7 +3,7 @@ import { Cron } from '@nestjs/schedule';
 import { EthClients } from 'src/web3/eth.clients';
 import { BulkReverseResolveRequest } from './dto/requests.dto';
 import { BulkReverseResolveResult } from './dto/response.dto';
-import {  mainnet } from 'viem/chains';
+import { mainnet } from 'viem/chains';
 import { Address, toCoinType } from 'viem';
 import { SUPPORTED_REVERSE_REGISTRAR_CHAINS } from 'src/web3/constants';
 
@@ -14,37 +14,36 @@ export class EnsReverseResolver {
   private readonly logger = new Logger(EnsReverseResolver.name);
   private readonly cache: Map<string, { value: string; exp: number }> =
     new Map();
-  private readonly cacheSet: Map<string,boolean> = new Map();
+  private readonly cacheSet: Map<string, boolean> = new Map();
 
   constructor(private readonly web3: EthClients) {}
 
-  public async clearCache(address: Address[]) {
+  public clearCache(address: Address[]) {
     const addrSet: Set<Address> = new Set(address);
     const addressesToClear: Set<Address> = new Set();
 
     for (const addr of addrSet) {
-        const lc = addr.toLocaleLowerCase();
-        if (this.cacheSet.has(lc)) {
-            addressesToClear.add(lc as Address);
-        }
+      const lc = addr.toLocaleLowerCase();
+      if (this.cacheSet.has(lc)) {
+        addressesToClear.add(lc as Address);
+      }
     }
 
     const keysToDelete: string[] = [];
-    for (const [key, value] of this.cache.entries()) {
-        const keyAddress = key.split("-")[0] as Address;
-        if (addressesToClear.has(keyAddress)) {
-            keysToDelete.push(key);
-        }
+    for (const [key] of this.cache.entries()) {
+      const keyAddress = key.split('-')[0] as Address;
+      if (addressesToClear.has(keyAddress)) {
+        keysToDelete.push(key);
+      }
     }
-    keysToDelete.forEach(key => {
-        this.cache.delete(key);
-    })
+    keysToDelete.forEach((key) => {
+      this.cache.delete(key);
+    });
   }
 
   public async resolve(
     request: BulkReverseResolveRequest,
   ): Promise<BulkReverseResolveResult> {
-
     if (request.addresses.length === 0) {
       return {
         result: [],
@@ -62,7 +61,7 @@ export class EnsReverseResolver {
     }
 
     const coin_type = toCoinType(request.chain_id || mainnet.id);
-    let finalResult: BulkReverseResolveResult = {
+    const finalResult: BulkReverseResolveResult = {
       result: [],
     };
 
@@ -88,20 +87,22 @@ export class EnsReverseResolver {
 
     if (promises.length > 0) {
       const resolvedNames = await Promise.all(promises);
-      for (let resolvedName of resolvedNames) {
+      for (const resolvedName of resolvedNames) {
         finalResult.result.push({
-            address: resolvedName.address,
-            hasReverseRecord: resolvedName.name !== null,
-            name: resolvedName.name || undefined
-        })
+          address: resolvedName.address,
+          hasReverseRecord: resolvedName.name !== null,
+          name: resolvedName.name || undefined,
+        });
 
         if (resolvedName.name) {
-            this.setCacheResult(resolvedName.address, coin_type, resolvedName.name);
+          this.setCacheResult(
+            resolvedName.address,
+            coin_type,
+            resolvedName.name,
+          );
         }
       }
     }
-
-    const end = new Date().getTime();
 
     return finalResult;
   }
@@ -148,19 +149,21 @@ export class EnsReverseResolver {
   }
 
   private ensureSupportedReverseChainId = (chain_id: number) => {
-      if (!SUPPORTED_REVERSE_REGISTRAR_CHAINS.includes(chain_id)) {
-        throw new BadRequestException(
-          `Unsupported reverse chain id: ${chain_id}, supported: ${SUPPORTED_REVERSE_REGISTRAR_CHAINS}`,
-        );
-      }
-    };
+    if (!SUPPORTED_REVERSE_REGISTRAR_CHAINS.includes(chain_id)) {
+      throw new BadRequestException(
+        `Unsupported reverse chain id: ${chain_id}, supported: ${SUPPORTED_REVERSE_REGISTRAR_CHAINS.join(', ')}`,
+      );
+    }
+  };
 
   @Cron('0 * * * *') // Run every hour at minute 0
   public clearExpiredCache() {
     const now = new Date().getTime();
     const keysToDelete: string[] = [];
 
-    this.logger.log("Clearing expired cache, timestamp:" + new Date());
+    this.logger.log(
+      'Clearing expired cache, timestamp:' + new Date().toISOString(),
+    );
 
     for (const [key, cachedItem] of this.cache.entries()) {
       if (cachedItem.exp <= now) {
@@ -170,7 +173,7 @@ export class EnsReverseResolver {
 
     for (const key of keysToDelete) {
       this.cache.delete(key);
-      const addr = key.split("-")[0];
+      const addr = key.split('-')[0];
       this.cacheSet.delete(addr);
     }
 

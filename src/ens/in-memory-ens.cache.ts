@@ -22,9 +22,12 @@ export class InMemoryEnsCache implements EnsCache {
   private primaryNameCache: Record<string, CacheWrapper<ReverseResolveResult>> =
     {};
 
-  public getPrimaryName(address: Address, chain_id: number): ReverseResolveResult | null {
+  public getPrimaryName(
+    address: Address,
+    chain_id: number,
+  ): ReverseResolveResult | null {
     const cacheKey = `${address.toLocaleLowerCase()}-${chain_id}`;
-    return this.getCacheOrNull(cacheKey, this.primaryNameCache)
+    return this.getCacheOrNull(cacheKey, this.primaryNameCache);
   }
 
   public setPrimaryName(result: ReverseResolveResult, chain_id: number) {
@@ -149,15 +152,15 @@ export class InMemoryEnsCache implements EnsCache {
     return base_key;
   }
 
-  private isExpiredCache(cache: CacheWrapper<any>): boolean {
+  private isExpiredCache(cache: CacheWrapper<unknown>): boolean {
     const now = new Date().getTime();
     return now > cache.expiration;
   }
 
-  private getCacheOrNull(
+  private getCacheOrNull<T>(
     key: string,
-    cache: Record<string, CacheWrapper<any>>,
-  ): any | null {
+    cache: Record<string, CacheWrapper<T>>,
+  ): T | null {
     const currentCache = cache[key];
     if (
       currentCache &&

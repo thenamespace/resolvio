@@ -1,1 +1,1 @@
-export * from "./resolver.service";
+export * from './resolver.service';

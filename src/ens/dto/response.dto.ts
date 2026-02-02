@@ -1,24 +1,24 @@
-import { EnsNameType } from "src/types/ens-utils.dto"
-import { EnsAddressRecord, EnsTextRecord } from "../ens.types"
-import type { Address } from "viem"
-import { ApiProperty } from '@nestjs/swagger'
+import { EnsNameType } from 'src/types/ens-utils.dto';
+import { EnsAddressRecord, EnsTextRecord } from '../ens.types';
+import type { Address } from 'viem';
+import { ApiProperty } from '@nestjs/swagger';
 
 export class EnsAddressesResponse {
-    name: string
-    resolver?: string
-    addresses: EnsAddressRecord[]
+  name: string;
+  resolver?: string;
+  addresses: EnsAddressRecord[];
 }
 
 export class EnsTextsResponse {
-    name: string
-    resolver?: string
-    texts: EnsTextRecord[]
+  name: string;
+  resolver?: string;
+  texts: EnsTextRecord[];
 }
 
 export class EnsMetadataResponse {
-    owner: string
-    source: EnsNameType
-    chainId: number
+  owner: string;
+  source: EnsNameType;
+  chainId: number;
 }
 
 export class ReverseResolveResult {

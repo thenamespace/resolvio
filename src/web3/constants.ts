@@ -7,8 +7,8 @@ export const SUPPORTED_REVERSE_REGISTRAR_CHAINS: number[] = [
   base.id,
   arbitrum.id,
   linea.id,
-  scroll.id
-]
+  scroll.id,
+];
 
 export const UNIVERSAL_RESOLVER_ADDRESS =
   '0xeEeEEEeE14D718C2B47D9923Deab1335E144EeEe';

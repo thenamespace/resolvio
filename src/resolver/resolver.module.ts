@@ -1,10 +1,10 @@
-import { Module } from "@nestjs/common";
-import { ENSModule } from "src/ens/ens.module";
-import { ResolverService } from "./resolver.service";
+import { Module } from '@nestjs/common';
+import { ENSModule } from 'src/ens/ens.module';
+import { ResolverService } from './resolver.service';
 
 @Module({
-    imports: [ENSModule],
-    controllers: [],
-    providers: [ResolverService]
+  imports: [ENSModule],
+  controllers: [],
+  providers: [ResolverService],
 })
 export class ResolverModule {}

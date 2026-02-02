@@ -7,18 +7,18 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { join } from 'path';
 
 @Module({
-  imports: [ 
+  imports: [
     ConfigModule.forRoot({
-      isGlobal: true,        // makes ConfigService available app-wide
-      envFilePath: '.env',   // path to your .env file
+      isGlobal: true, // makes ConfigService available app-wide
+      envFilePath: '.env', // path to your .env file
     }),
     ScheduleModule.forRoot(),
     ServeStaticModule.forRoot({
       rootPath: join(__dirname, '..', 'public'),
       exclude: ['/api', '/ens'], // Exclude API routes from static file serving
     }),
-    ENSModule, 
-    ResolverModule
+    ENSModule,
+    ResolverModule,
   ],
 })
 export class AppModule {}

@@ -1,5 +1,6 @@
 import { arbitrum, base, optimism } from 'viem/chains';
 import { OffchainLookupParams } from './ens.types';
+import { Address, Hex } from 'viem';
 
 export const convertEVMChainIdToCoinType = (chainId: number) => {
   return (0x80000000 | chainId) >>> 0;
@@ -29,17 +30,34 @@ export const GITHUB_TEXT = 'com.github';
 
 const OFFCHAIN_LOOKUP = 'OffchainLookup';
 
-export function isOffchainLookupErr(err: any): boolean {
-  if (!err || !err.cause || !err.cause.data) {
+type ContractError = {
+  cause?: {
+    data?: {
+      errorName?: string;
+      args?: any[];
+    };
+  };
+};
+
+export function isOffchainLookupErr(err: unknown): boolean {
+  const error = err as ContractError;
+  if (!error || !error.cause || !error.cause.data) {
     return false;
   }
-  const { errorName } = err.cause.data;
+  const { errorName } = error.cause.data;
   return errorName === OFFCHAIN_LOOKUP;
 }
 
-export function extractOffchainLookupData(err: any): OffchainLookupParams {
-  const { args } = err.cause.data;
-  const [sender, urls, calldata, callbackSignature, extraData] = args;
+export function extractOffchainLookupData(err: unknown): OffchainLookupParams {
+  const error = err as ContractError;
+  const { args } = error.cause!.data!;
+  const [sender, urls, calldata, callbackSignature, extraData] = args as [
+    Address,
+    string[],
+    Hex,
+    Hex,
+    Hex,
+  ];
 
   return {
     sender,

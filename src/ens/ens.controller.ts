@@ -93,7 +93,7 @@ export class EnsForwardResolutionController {
 
   @Delete('/cache/:name')
   @ApiExcludeEndpoint()
-  public async clearCache(@Param() name: EnsNameRequest) {
+  public clearCache(@Param() name: EnsNameRequest) {
     return this.ensResolver.clearCache(name.name, CacheType.ALL);
   }
 }
@@ -129,9 +129,7 @@ export class EnsReverseResolutionController {
 
   @Delete('/reverse/cache')
   @ApiExcludeEndpoint()
-  public async deleteReverseResolveCache(
-    @Body() request: DeleteReverseCacheRequest,
-  ) {
+  public deleteReverseResolveCache(@Body() request: DeleteReverseCacheRequest) {
     this.ensReverseResolver.clearCache(request.addresses);
   }
 }

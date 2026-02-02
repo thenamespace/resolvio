@@ -4,8 +4,8 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { IResolverService } from '../resolver';
-import { Address, http, toCoinType } from 'viem';
-import { base, mainnet } from 'viem/chains';
+import { http } from 'viem';
+import { mainnet } from 'viem/chains';
 import { createEnsPublicClient } from '@ensdomains/ensjs';
 import { InMemoryEnsCache } from './in-memory-ens.cache';
 import { CacheType, EnsCache } from './interface/ens.cache';
@@ -21,15 +21,8 @@ import {
   TWITTER_TEXT,
   URL_TEXT,
 } from './ens.utils';
-import {
-  EnsAddressRecord,
-  EnsProfile,
-  EnsTextRecord,
-} from './ens.types';
-import {
-  EnsAddressesResponse,
-  EnsTextsResponse,
-} from './dto/response.dto';
+import { EnsAddressRecord, EnsProfile, EnsTextRecord } from './ens.types';
+import { EnsAddressesResponse, EnsTextsResponse } from './dto/response.dto';
 import {
   ResolveNameRequest,
   ResolveNameResponse,
@@ -76,13 +69,12 @@ export class EnsResolver implements IResolverService {
     const mainnetRpc = this.ethClients.getMainnetRpcUrl();
     this.ensClient = createEnsPublicClient({
       transport: http(mainnetRpc),
-      //@ts-ignore
       chain: mainnet,
     });
     this.ensCache = this._ensCache;
   }
 
-  public async clearCache(name: string, type: CacheType) {
+  public clearCache(name: string, type: CacheType) {
     this.ensCache.clearCacheForName(name, [type]);
   }
 
@@ -103,7 +95,7 @@ export class EnsResolver implements IResolverService {
     const coin_type = blockchain.coin_type;
     const cachedAddresses = this.ensCache.getAddresses(name, [coin_type]);
 
-    let response: ResolveNameResponse = {
+    const response: ResolveNameResponse = {
       protocol: NameProtocol.ENS,
       value: '',
       chain_id: blockchain.chain_id,
@@ -192,8 +184,8 @@ export class EnsResolver implements IResolverService {
       addresses:
         result && result.coins && result.coins.length
           ? result.coins.map((coin) => {
-              return { address: coin.value, coin: coin.id, name: coin.name };
-            })
+            return { address: coin.value, coin: coin.id, name: coin.name };
+          })
           : [],
       texts: result && result.texts ? result.texts : [],
       contenthash: contenthash,

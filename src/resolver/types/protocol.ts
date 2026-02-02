@@ -1,3 +1,3 @@
 export enum NameProtocol {
-    ENS = "ens"
+  ENS = 'ens',
 }
