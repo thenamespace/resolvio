@@ -1,5 +1,5 @@
 ---
-name: Resolvio API
+name: Resolvio
 description: Interact with Resolvio - an ENS (Ethereum Name Service) resolution API. Resolve ENS names to addresses, perform reverse lookups, and fetch profile data.
 ---
 
