@@ -19,22 +19,18 @@ import {
 } from './dto/requests.dto';
 import { CacheType } from './interface/ens.cache';
 import { ENS_ENDPOINTS } from '../docs/ens.endpoints';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiExcludeEndpoint, ApiTags } from '@nestjs/swagger';
 import { type Address } from 'viem';
 import { isEthereumAddress } from 'class-validator';
 import { EnsReverseResolver } from './ens-resverse.resolver';
 
-@ApiTags('ENS')
+@ApiTags('Forward Resolution')
 @Controller('/ens/v1')
-export class EnsResolveSimplifiedController {
-  constructor(
-    private readonly ensResolver: EnsResolver,
-    private readonly ensReverseResolver: EnsReverseResolver,
-  ) {}
+export class EnsForwardResolutionController {
+  constructor(private readonly ensResolver: EnsResolver) {}
 
   @Get('/profile/:name')
   @ENS_ENDPOINTS.getEnsProfile.operation
-  @ENS_ENDPOINTS.getEnsProfile.tags
   @ENS_ENDPOINTS.getEnsProfile.param
   @ENS_ENDPOINTS.getEnsProfile.query
   @ENS_ENDPOINTS.getEnsProfile.response
@@ -49,7 +45,6 @@ export class EnsResolveSimplifiedController {
 
   @Get('/addresses/:name')
   @ENS_ENDPOINTS.getEnsAddresses.operation
-  @ENS_ENDPOINTS.getEnsAddresses.tags
   @ENS_ENDPOINTS.getEnsAddresses.param
   @ENS_ENDPOINTS.getEnsAddresses.query
   @ENS_ENDPOINTS.getEnsAddresses.queryNoCache
@@ -69,7 +64,6 @@ export class EnsResolveSimplifiedController {
 
   @Get('/texts/:name')
   @ENS_ENDPOINTS.getEnsTexts.operation
-  @ENS_ENDPOINTS.getEnsTexts.tags
   @ENS_ENDPOINTS.getEnsTexts.param
   @ENS_ENDPOINTS.getEnsTexts.query
   @ENS_ENDPOINTS.getEnsTexts.queryNoCache
@@ -89,7 +83,6 @@ export class EnsResolveSimplifiedController {
 
   @Get('/contenthash/:name')
   @ENS_ENDPOINTS.getEnsContenthash.operation
-  @ENS_ENDPOINTS.getEnsContenthash.tags
   @ENS_ENDPOINTS.getEnsContenthash.param
   @ENS_ENDPOINTS.getEnsContenthash.response
   @ENS_ENDPOINTS.getEnsContenthash.response400
@@ -99,28 +92,28 @@ export class EnsResolveSimplifiedController {
   }
 
   @Delete('/cache/:name')
-  @ENS_ENDPOINTS.clearCache.operation
-  @ENS_ENDPOINTS.clearCache.tags
-  @ENS_ENDPOINTS.clearCache.param
-  @ENS_ENDPOINTS.clearCache.response
-  @ENS_ENDPOINTS.clearCache.response400
+  @ApiExcludeEndpoint()
   public async clearCache(@Param() name: EnsNameRequest) {
     return this.ensResolver.clearCache(name.name, CacheType.ALL);
   }
+}
+
+@ApiTags('Reverse Resolution')
+@Controller('/ens/v1')
+export class EnsReverseResolutionController {
+  constructor(private readonly ensReverseResolver: EnsReverseResolver) {}
 
   @Post('/reverse/bulk')
   @ENS_ENDPOINTS.bulkReverseResolve.operation
-  @ENS_ENDPOINTS.bulkReverseResolve.tags
   @ENS_ENDPOINTS.bulkReverseResolve.body
   @ENS_ENDPOINTS.bulkReverseResolve.response
   @ENS_ENDPOINTS.bulkReverseResolve.response400
   public async bulkReverseResolve(@Body() request: BulkReverseResolveRequest) {
-     return this.ensReverseResolver.resolve(request);
+    return this.ensReverseResolver.resolve(request);
   }
 
-  @Post('/reverse/:address')
+  @Post('/reverse/single/:address')
   @ENS_ENDPOINTS.reverseResolve.operation
-  @ENS_ENDPOINTS.reverseResolve.tags
   @ENS_ENDPOINTS.reverseResolve.param
   @ENS_ENDPOINTS.reverseResolve.response
   @ENS_ENDPOINTS.reverseResolve.response400
@@ -134,8 +127,11 @@ export class EnsResolveSimplifiedController {
     });
   }
 
-  @Delete("/reverse/cache")
-  public async deleteReverseResolveCache(@Body() request: DeleteReverseCacheRequest) {
-    this.ensReverseResolver.clearCache(request.addresses)
+  @Delete('/reverse/cache')
+  @ApiExcludeEndpoint()
+  public async deleteReverseResolveCache(
+    @Body() request: DeleteReverseCacheRequest,
+  ) {
+    this.ensReverseResolver.clearCache(request.addresses);
   }
 }

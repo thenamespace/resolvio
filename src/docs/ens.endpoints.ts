@@ -9,7 +9,7 @@ export const ENS_ENDPOINTS = {
       summary: 'Get ENS Profile',
       description: 'Retrieve comprehensive profile information for an ENS name including addresses, texts, and content hash'
     }),
-    tags: ApiTags('ENS'),
+    tags: ApiTags('Forward Resolution'),
     param: ApiParam({
       name: 'name',
       description: 'ENS name (e.g., "vitalik.eth")',
@@ -42,7 +42,7 @@ export const ENS_ENDPOINTS = {
       summary: 'Get ENS Addresses',
       description: 'Retrieve cryptocurrency addresses associated with an ENS name'
     }),
-    tags: ApiTags('ENS'),
+    tags: ApiTags('Forward Resolution'),
     param: ApiParam({
       name: 'name',
       description: 'ENS name (e.g., "vitalik.eth")',
@@ -81,7 +81,7 @@ export const ENS_ENDPOINTS = {
       summary: 'Get ENS Text Records',
       description: 'Retrieve text records associated with an ENS name (e.g., avatar, description, keywords)'
     }),
-    tags: ApiTags('ENS'),
+    tags: ApiTags('Forward Resolution'),
     param: ApiParam({
       name: 'name',
       description: 'ENS name (e.g., "vitalik.eth")',
@@ -120,7 +120,7 @@ export const ENS_ENDPOINTS = {
       summary: 'Get ENS Metadata',
       description: 'Retrieve metadata information for an ENS name including ownership, expiry, and resolver details'
     }),
-    tags: ApiTags('ENS'),
+    tags: ApiTags('Forward Resolution'),
     param: ApiParam({
       name: 'name',
       description: 'ENS name (e.g., "vitalik.eth")',
@@ -147,7 +147,7 @@ export const ENS_ENDPOINTS = {
       summary: 'Get ENS Contenthash',
       description: 'Retrieve the content hash associated with an ENS name (IPFS, IPNS, or other content identifiers)'
     }),
-    tags: ApiTags('ENS'),
+    tags: ApiTags('Forward Resolution'),
     param: ApiParam({
       name: 'name',
       description: 'ENS name (e.g., "vitalik.eth")',
@@ -213,7 +213,7 @@ export const ENS_ENDPOINTS = {
       summary: 'Bulk Reverse Resolve',
       description: 'Resolve multiple Ethereum addresses to their primary ENS names in a single request'
     }),
-    tags: ApiTags('ENS'),
+    tags: ApiTags('Reverse Resolution'),
     body: ApiBody({
       description: 'Request containing array of addresses to reverse resolve',
       schema: {
@@ -255,7 +255,7 @@ export const ENS_ENDPOINTS = {
       summary: 'Reverse Resolve Single Address',
       description: 'Resolve a single Ethereum address to its primary ENS name'
     }),
-    tags: ApiTags('ENS'),
+    tags: ApiTags('Reverse Resolution'),
     param: ApiParam({
       name: 'address',
       description: 'Ethereum address (e.g., "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045")',

@@ -52,7 +52,7 @@ export const useResolvio = (): UseResolvioReturn => {
         params.append('contenthash', 'true');
       }
 
-      const apiUrl = `${API_CONFIG.baseUrl}/api/v1/resolve/ens/name/${ensName}/profile?${params.toString()}`;
+      const apiUrl = `${API_CONFIG.baseUrl}/ens/v1/profile/${ensName}?${params.toString()}`;
       
       const response = await fetch(apiUrl);
 

@@ -7,9 +7,8 @@
   "license": "UNLICENSED",
   "scripts": {
     "build": "nest build",
-    "build:frontend": "npm --prefix landing-page run build",
-    "copy:frontend": "rm -rf public && cp -r landing-page/dist public",
-    "build:all": "npm run build && npm run build:frontend && npm run copy:frontend",
+    "build:frontend": "npm --prefix landing-page run build && rm -rf public && cp -r landing-page/dist public",
+    "build:all": "npm run build && npm run build:frontend",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "nest start",
     "start:dev": "nest start --watch",
