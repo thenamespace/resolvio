@@ -26,7 +26,7 @@ describe('GET /ens/v2/profile/:name', () => {
     expect(res.body.addresses).toContainEqual(
       expect.objectContaining(onchainProfile.getAddress('eth')),
     );
-    expect(res.body.contenthash).toEqual(onchainProfile.contenthash);
+    expect(res.body.contenthash).toEqual({ exists: false }); // contenthash=false by default
   });
 
   // --- onchain — explicit params ---

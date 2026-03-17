@@ -4,20 +4,33 @@ import { NoCache } from './no-cache.request';
 
 export const DEFAULT_PROFILE_TEXTS = [
   'avatar',
-  'email',
+  'header',
+  'name',
   'description',
   'url',
+  'location',
+  'email',
   'com.twitter',
-  'com.github',
   'com.discord',
+  'com.github',
   'org.telegram',
+  'com.youtube',
 ];
 
-export const DEFAULT_PROFILE_CHAINS = [];
+export const DEFAULT_PROFILE_CHAINS = [
+  'eth',
+  'base',
+  'arb1',
+  'op',
+  'matic',
+  'celo',
+  'btc',
+  'sol',
+];
 
-// Defaults to ETH only — consumers can expand via ?addresses=eth,btc,...
+// Fallback when DEFAULT_PROFILE_CHAINS is empty
 export const DEFAULT_PROFILE_ADDRESSES = ['eth'];
-export const DEFAULT_PROFILE_CONTENTHASH = true;
+export const DEFAULT_PROFILE_CONTENTHASH = false;
 
 function splitParam(value: unknown): string[] {
   const arr = Array.isArray(value) ? value : [String(value)];

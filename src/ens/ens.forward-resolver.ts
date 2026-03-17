@@ -8,6 +8,7 @@ import {
   AddressResult,
   ContenthashResult,
   DEFAULT_PROFILE_ADDRESSES,
+  DEFAULT_PROFILE_CHAINS,
   DEFAULT_PROFILE_CONTENTHASH,
   DEFAULT_PROFILE_TEXTS,
   EnsAddressesRequest,
@@ -84,6 +85,7 @@ export class EnsForwardResolver {
     name: string,
     request: EnsAddressesRequest,
   ): Promise<ForwardAddressesResponse> {
+    
     if (request.coins?.length && request.chains?.length) {
       throw new BadRequestException('Provide either coins or chains, not both');
     }
@@ -177,11 +179,22 @@ export class EnsForwardResolver {
     name: string,
     request: ProfileRequest,
   ): Promise<ProfileResponse> {
-    const textKeys = request.texts ?? DEFAULT_PROFILE_TEXTS;
-    const includeContenthash =
-      request.contenthash ?? DEFAULT_PROFILE_CONTENTHASH;
-    const addressInputs = request.addresses ?? DEFAULT_PROFILE_ADDRESSES;
-    const noCache = request.noCache ?? false;
+
+    const noTextsRequest      = !request.texts     || request.texts.length     === 0;
+    const noAddressesRequest  = !request.addresses || request.addresses.length === 0;
+    const noContenthashRequest = request.contenthash === undefined; // explicit false ≠ unset
+
+    const useDefaultProfile = noTextsRequest && noAddressesRequest && noContenthashRequest;
+
+    const textKeys         = noTextsRequest ? DEFAULT_PROFILE_TEXTS : request.texts!;
+    const includeContenthash = request.contenthash ?? DEFAULT_PROFILE_CONTENTHASH;
+    const noCache          = request.noCache ?? false;
+
+    // When no params at all: use DEFAULT_PROFILE_CHAINS (a richer default set, populated later).
+    // When some params are explicit: fall back to DEFAULT_PROFILE_ADDRESSES for addresses.
+    const addressInputs = useDefaultProfile
+      ? (DEFAULT_PROFILE_CHAINS.length > 0 ? DEFAULT_PROFILE_CHAINS : DEFAULT_PROFILE_ADDRESSES)
+      : (noAddressesRequest ? DEFAULT_PROFILE_ADDRESSES : request.addresses!);
 
     // Each address input is either a coin type number ("60") or a chain name ("eth").
     const requestedCoins: number[] = addressInputs.map((input) => {

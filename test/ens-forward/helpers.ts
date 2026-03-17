@@ -64,12 +64,8 @@ export const onchainProfile: TestEnsProfile = buildProfile({
   name: 'artii.eth',
   resolver: '0x231b0Ee14048e9dCcD1d247744d114a4EB5E8E63' as `0x${string}`,
   texts: [
-    {
-      key: 'avatar',
-      value: 'https://avatars.namespace.ninja/artii.eth_1750354393.png',
-      exists: true,
-    },
-    { key: 'email', value: 'arthy@namespace.ninja', exists: true },
+    { key: 'avatar',      value: 'https://avatars.namespace.ninja/artii.eth_1750354393.png', exists: true },
+    { key: 'email',       value: 'arthy@namespace.ninja', exists: true },
     { key: 'unknown', exists: false },
   ],
   addresses: [
@@ -121,8 +117,51 @@ export const onchainProfile: TestEnsProfile = buildProfile({
 // ---------------------------------------------------------------------------
 
 export const offchainProfile: TestEnsProfile = buildProfile({
-  ...onchainProfile,
-  name: 'artii.eth', // placeholder — user will supply offchain name + records later
+  name: 'arti.offchainsub.eth', // placeholder — user will supply offchain name + records later,
+   texts: [
+    { key: 'avatar',      value: 'https://avatars.namespace.ninja/artii.eth_1750354393.png', exists: true },
+    { key: 'header',      exists: false },
+    { key: 'name',        exists: false },
+    { key: 'description', exists: false },
+    { key: 'url',         exists: false },
+    { key: 'location',    exists: false },
+    { key: 'email',       value: 'arthy@namespace.ninja', exists: true },
+    { key: 'com.twitter', exists: false },
+    { key: 'com.discord', exists: false },
+    { key: 'com.github',  exists: false },
+    { key: 'org.telegram',exists: false },
+    { key: 'com.youtube', exists: false },
+  ],
+  addresses: [
+    {
+      coin: COIN_ETH,
+      chain: 'eth',
+      value: '0x1D84ad46F1ec91b4Bb3208F645aD2fA7aBEc19f8',
+      exists: true,
+    },
+    {
+      coin: COIN_BTC,
+      chain: 'btc',
+      value: '1L2rwrhGFQNR8MpZkTaTjFcZK4mEqxScaA',
+      exists: true,
+    },
+    {
+      coin: COIN_OP,
+      chain: 'op',
+      value: '0x1D84ad46F1ec91b4Bb3208F645aD2fA7aBEc19f8',
+      exists: true,
+    },
+    {
+      coin: COIN_BASE,
+      chain: 'base',
+      value: '0x1D84ad46F1ec91b4Bb3208F645aD2fA7aBEc19f8',
+      exists: true,
+    },
+  ],
+  contenthash: {
+    value: 'ipfs://bafybeid7gdzjx5gtm4cibfkmglflzyalyd3wknzfzxk64dxnq5jegfjgha',
+    exists: true,
+  },
 });
 
 // ---------------------------------------------------------------------------

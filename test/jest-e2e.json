@@ -9,5 +9,8 @@
   "moduleNameMapper": {
     "^src/(.*)$": "<rootDir>/../src/$1"
   },
+  "transformIgnorePatterns": [
+    "/node_modules/(?!(@ensdomains|viem|abitype|isows|webauthn-p256|graphql-request)/)"
+  ],
   "testTimeout": 30000
 }
