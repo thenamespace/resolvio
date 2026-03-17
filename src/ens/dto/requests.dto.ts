@@ -1,4 +1,4 @@
-import { Transform, Type } from 'class-transformer';
+import { Transform } from 'class-transformer';
 import {
   IsOptional,
   IsString,
@@ -45,26 +45,33 @@ export class NoCache {
 export class EnsAddressesRequest extends NoCache {
   @ApiProperty({
     description:
-      'Array of coin types to retrieve (e.g., [60, 0] for ETH and BTC)',
+      'Array of coin types — repeated params (?coins=60&coins=0) or comma-separated (?coins=60,0)',
     required: false,
     type: [Number],
     example: [60, 0],
   })
   @IsOptional()
-  @Type(() => Number) // <-- convert each element to number
-  @IsNumber({}, { each: true }) // <-- validate each element
+  @Transform(({ value }) => {
+    const arr = Array.isArray(value) ? value : String(value).split(',');
+    return arr.flatMap((v: string) => String(v).split(',')).map(Number);
+  })
+  @IsNumber({}, { each: true })
   coins?: number[];
 }
 
 export class EnsTextsRequest extends NoCache {
   @ApiProperty({
     description:
-      'Array of text record keys to retrieve (e.g., ["avatar", "description"])',
+      'Array of text record keys — repeated params (?keys=avatar&keys=email) or comma-separated (?keys=avatar,email)',
     required: false,
     type: [String],
     example: ['avatar', 'description', 'keywords'],
   })
   @IsOptional()
+  @Transform(({ value }) => {
+    const arr = Array.isArray(value) ? value : String(value).split(',');
+    return arr.flatMap((v: string) => String(v).split(',')).map((k: string) => k.trim()).filter(Boolean);
+  })
   @IsArray()
   @IsString({ each: true })
   keys?: string[];

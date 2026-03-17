@@ -15,6 +15,33 @@ export class EnsTextsResponse {
   texts: EnsTextRecord[];
 }
 
+export class TextResult {
+  key: string;
+  value?: string;
+  exists: boolean;
+}
+
+export class AddressResult {
+  coin: number;
+  value?: string;
+  exists: boolean;
+}
+
+export class ContenthashResult {
+  value?: string;
+  exists: boolean;
+}
+
+export class ForwardTextsResponse {
+  name: string;
+  texts: TextResult[];
+}
+
+export class ForwardAddressesResponse {
+  name: string;
+  addresses: AddressResult[];
+}
+
 export class EnsMetadataResponse {
   owner: string;
   source: EnsNameType;

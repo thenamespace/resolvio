@@ -6,8 +6,7 @@ import { BulkReverseResolveResult } from './dto/response.dto';
 import { mainnet } from 'viem/chains';
 import { Address, toCoinType } from 'viem';
 import { SUPPORTED_REVERSE_REGISTRAR_CHAINS } from 'src/web3/constants';
-
-const cache_expiry_millis = 30 * 60 * 1000;
+import { AppProperties } from 'src/app-properties/app-properties';
 
 @Injectable()
 export class EnsReverseResolver {
@@ -15,8 +14,14 @@ export class EnsReverseResolver {
   private readonly cache: Map<string, { value: string; exp: number }> =
     new Map();
   private readonly cacheSet: Map<string, boolean> = new Map();
+  private readonly cacheExpiry: number;
 
-  constructor(private readonly web3: EthClients) {}
+  constructor(
+    private readonly web3: EthClients,
+    appProperties: AppProperties,
+  ) {
+    this.cacheExpiry = appProperties.reverseResolveCacheExpiry;
+  }
 
   public clearCache(address: Address[]) {
     const addrSet: Set<Address> = new Set(address);
@@ -110,10 +115,10 @@ export class EnsReverseResolver {
   private async resolveNamePromise(
     addr: Address,
   ): Promise<{ address: Address; name: string | null }> {
-    const result = await this.web3.getEnsClient().getEnsName({ address: addr });
+    const result = await this.web3.getEnsClient().getName({ address: addr });
     return {
       address: addr,
-      name: result,
+      name: result.name,
     };
   }
 
@@ -139,7 +144,7 @@ export class EnsReverseResolver {
   private setCacheResult(addr: Address, coinType: bigint, name: string) {
     this.cache.set(this.cacheKey(addr, coinType), {
       value: name,
-      exp: new Date().getTime() + cache_expiry_millis,
+      exp: new Date().getTime() + this.cacheExpiry,
     });
     this.cacheSet.set(addr, true);
   }

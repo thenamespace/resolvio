@@ -66,11 +66,7 @@ export class EnsResolver implements IResolverService {
     private readonly _ensCache: InMemoryEnsCache,
     private readonly ethClients: EthClients,
   ) {
-    const mainnetRpc = this.ethClients.getMainnetRpcUrl();
-    this.ensClient = createEnsPublicClient({
-      transport: http(mainnetRpc),
-      chain: mainnet,
-    });
+    this.ensClient = this.ethClients.getEnsClient();
     this.ensCache = this._ensCache;
   }
 

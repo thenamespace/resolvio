@@ -3,6 +3,7 @@ import { CacheType, EnsCache } from './interface/ens.cache';
 import { EnsAddressRecord, EnsProfile, EnsTextRecord } from './ens.types';
 import { Address, namehash } from 'viem';
 import { ReverseResolveResult } from './dto/response.dto';
+import { AppProperties } from 'src/app-properties/app-properties';
 
 type CacheWrapper<T> = {
   data: T;
@@ -11,9 +12,11 @@ type CacheWrapper<T> = {
 
 @Injectable()
 export class InMemoryEnsCache implements EnsCache {
-  // use 5 minutes cache expiry
-  // TODO: move this to env
-  static CACHE_EXPIRATION = 5 * 60 * 1000;
+  private readonly cacheExpiration: number;
+
+  constructor(appProperties: AppProperties) {
+    this.cacheExpiration = appProperties.forwardResolveCacheExpiry;
+  }
 
   private addressesCache: Record<string, CacheWrapper<EnsAddressRecord[]>> = {};
   private textsCache: Record<string, CacheWrapper<EnsTextRecord[]>> = {};
@@ -34,7 +37,7 @@ export class InMemoryEnsCache implements EnsCache {
     const now = new Date().getTime();
     const cacheKey = `${result.address.toLocaleLowerCase()}-${chain_id}`;
     this.primaryNameCache[cacheKey] = {
-      expiration: now + InMemoryEnsCache.CACHE_EXPIRATION,
+      expiration: now + this.cacheExpiration,
       data: result,
     };
   }
@@ -42,7 +45,7 @@ export class InMemoryEnsCache implements EnsCache {
   public setProfile(name: string, profile: EnsProfile) {
     const now = new Date().getTime();
     this.profileCache[name] = {
-      expiration: now + InMemoryEnsCache.CACHE_EXPIRATION,
+      expiration: now + this.cacheExpiration,
       data: profile,
     };
   }
@@ -59,7 +62,7 @@ export class InMemoryEnsCache implements EnsCache {
     const addrKey = this.addrCacheKey(name, coins);
     const now = new Date().getTime();
     this.addressesCache[addrKey] = {
-      expiration: now + InMemoryEnsCache.CACHE_EXPIRATION,
+      expiration: now + this.cacheExpiration,
       data: addresses,
     };
   }
@@ -76,7 +79,7 @@ export class InMemoryEnsCache implements EnsCache {
     const key = this.textCacheKey(name, texts);
     const now = new Date().getTime();
     this.textsCache[key] = {
-      expiration: now + InMemoryEnsCache.CACHE_EXPIRATION,
+      expiration: now + this.cacheExpiration,
       data: data,
     };
   }
@@ -93,7 +96,7 @@ export class InMemoryEnsCache implements EnsCache {
   public setContenthash(name: string, contenthash: string) {
     const now = new Date().getTime();
     this.contentCache[name] = {
-      expiration: now + InMemoryEnsCache.CACHE_EXPIRATION,
+      expiration: now + this.cacheExpiration,
       data: contenthash,
     };
   }
