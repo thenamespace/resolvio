@@ -14,6 +14,7 @@ import {
   EnsNameRequest,
   EnsTextsRequest,
   NoCache,
+  ProfileRequest,
 } from './dto';
 import { SUPPORTED_CHAINS } from './supported-chains';
 
@@ -48,6 +49,14 @@ export class EnsForwardController {
     @Query() query: NoCache,
   ) {
     return this.resolver.resolveContenthash(nameReq.name, query.noCache);
+  }
+
+  @Get('/profile/:name')
+  public getProfile(
+    @Param() nameReq: EnsNameRequest,
+    @Query() query: ProfileRequest,
+  ) {
+    return this.resolver.resolveProfile(nameReq.name, query);
   }
 
   @Delete('/cache/:name')

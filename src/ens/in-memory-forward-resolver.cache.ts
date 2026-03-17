@@ -16,7 +16,10 @@ export class InMemoryForwardResolverCache implements IForwardResolverCache {
   private readonly disabled: boolean;
 
   private readonly textCache = new Map<string, CacheEntry<EnsTextRecord>>();
-  private readonly addressCache = new Map<string, CacheEntry<EnsAddressRecord>>();
+  private readonly addressCache = new Map<
+    string,
+    CacheEntry<EnsAddressRecord>
+  >();
   private readonly contenthashCache = new Map<string, CacheEntry<string>>();
 
   // Tracks all cache keys per name across all caches for O(1) bulk deletes
@@ -60,7 +63,10 @@ export class InMemoryForwardResolverCache implements IForwardResolverCache {
 
   getAddress(name: string, coin: number): CacheEntry<EnsAddressRecord> | null {
     if (this.disabled) return null;
-    const entry = this.getOrNull(this.addressKey(name, coin), this.addressCache);
+    const entry = this.getOrNull(
+      this.addressKey(name, coin),
+      this.addressCache,
+    );
     if (entry?.isEmpty) {
       this.logger.debug(`Cache hit (empty) address ${name}/${coin}`);
     }
@@ -86,7 +92,10 @@ export class InMemoryForwardResolverCache implements IForwardResolverCache {
 
   getContenthash(name: string): CacheEntry<string> | null {
     if (this.disabled) return null;
-    const entry = this.getOrNull(this.contenthashKey(name), this.contenthashCache);
+    const entry = this.getOrNull(
+      this.contenthashKey(name),
+      this.contenthashCache,
+    );
     if (entry?.isEmpty) {
       this.logger.debug(`Cache hit (empty) contenthash ${name}`);
     }

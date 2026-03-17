@@ -11,7 +11,8 @@ export class EnsNameRequest {
   })
   @IsString()
   @Length(6, 256, {
-    message: 'ENS name must be between 6 and 256 characters (e.g. "example.eth").',
+    message:
+      'ENS name must be between 6 and 256 characters (e.g. "example.eth").',
   })
   @Transform(({ value }) => String(value).trim().toLowerCase())
   name: string;

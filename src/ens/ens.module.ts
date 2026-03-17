@@ -25,7 +25,11 @@ import { EnsForwardController } from './ens.forward-controller';
       useClass: InMemoryForwardResolverCache,
     },
   ],
-  controllers: [EnsForwardResolutionController, EnsReverseResolutionController, EnsForwardController],
+  controllers: [
+    EnsForwardResolutionController,
+    EnsReverseResolutionController,
+    EnsForwardController,
+  ],
   imports: [Web3Module],
 })
 export class ENSModule {}

@@ -17,5 +17,5 @@ export interface IForwardResolverCache {
   deleteContenthash(name: string): void;
 
   deleteAll(name: string): void;
-  isEnabled(): boolean
+  isEnabled(): boolean;
 }

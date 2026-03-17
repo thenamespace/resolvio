@@ -2,7 +2,9 @@ import { DocumentBuilder } from '@nestjs/swagger';
 
 export const swaggerConfig = new DocumentBuilder()
   .setTitle('Resolvio API')
-  .setDescription('ENS Resolution Service - Resolve ENS names, addresses, profiles and bulk reverse resolve')
+  .setDescription(
+    'ENS Resolution Service - Resolve ENS names, addresses, profiles and bulk reverse resolve',
+  )
   .setVersion('1.0')
   .setContact(
     'Development Team',

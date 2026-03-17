@@ -24,7 +24,6 @@ import { type Address } from 'viem';
 import { isEthereumAddress } from 'class-validator';
 import { EnsReverseResolver } from './ens-resverse.resolver';
 
-
 // Deprecated, will be removed in
 // future iteration
 @ApiTags('Forward Resolution')

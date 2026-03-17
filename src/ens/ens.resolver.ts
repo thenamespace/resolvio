@@ -180,8 +180,8 @@ export class EnsResolver implements IResolverService {
       addresses:
         result && result.coins && result.coins.length
           ? result.coins.map((coin) => {
-            return { address: coin.value, coin: coin.id, name: coin.name };
-          })
+              return { address: coin.value, coin: coin.id, name: coin.name };
+            })
           : [],
       texts: result && result.texts ? result.texts : [],
       contenthash: contenthash,

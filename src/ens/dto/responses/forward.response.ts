@@ -1,3 +1,5 @@
+import { Address } from 'viem';
+
 export class TextResult {
   key: string;
   value?: string;
@@ -24,4 +26,12 @@ export class ForwardTextsResponse {
 export class ForwardAddressesResponse {
   name: string;
   addresses: AddressResult[];
+}
+
+export class ProfileResponse {
+  name: string;
+  texts: TextResult[];
+  addresses: AddressResult[];
+  contenthash: ContenthashResult;
+  resolver?: Address;
 }

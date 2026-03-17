@@ -1,4 +1,9 @@
-import { IsArray, IsEthereumAddress, IsNumber, IsOptional } from 'class-validator';
+import {
+  IsArray,
+  IsEthereumAddress,
+  IsNumber,
+  IsOptional,
+} from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { Address } from 'viem';
 import { NoCache } from './no-cache.request';
