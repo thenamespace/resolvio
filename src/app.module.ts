@@ -1,9 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ENSModule } from './ens/ens.module';
 import { ConfigModule } from '@nestjs/config';
-import { ServeStaticModule } from '@nestjs/serve-static';
 import { ScheduleModule } from '@nestjs/schedule';
-import { join } from 'path';
 import { AppPropertiesModule } from './app-properties/app-properties.module';
 
 @Module({
@@ -14,10 +12,6 @@ import { AppPropertiesModule } from './app-properties/app-properties.module';
     }),
     AppPropertiesModule,
     ScheduleModule.forRoot(),
-    ServeStaticModule.forRoot({
-      rootPath: join(__dirname, '..', 'public'),
-      exclude: ['/api', '/ens'], // Exclude API routes from static file serving
-    }),
     ENSModule,
   ],
 })
