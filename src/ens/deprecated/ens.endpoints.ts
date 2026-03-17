@@ -11,8 +11,8 @@ import {
   EnsAddressRecord,
   EnsTextRecord,
   EnsMetadata,
-} from '../ens/ens.types';
-import { BulkReverseResolveResult } from '../ens/dto';
+} from '../ens.types';
+import { BulkReverseResolveResult } from '../dto';
 
 export const ENS_ENDPOINTS = {
   // Profile endpoint
@@ -242,9 +242,7 @@ export const ENS_ENDPOINTS = {
         properties: {
           addresses: {
             type: 'array',
-            items: {
-              type: 'string',
-            },
+            items: { type: 'string' },
             example: [
               '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045',
               '0x225f137127d9067788314bc7fcc1f36746a3c3B5',

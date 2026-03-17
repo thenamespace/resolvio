@@ -4,6 +4,7 @@ import { ConfigService } from '@nestjs/config';
 // Defaults in seconds
 const DEFAULT_FORWARD_CACHE_EXPIRY_S = 5 * 60; // 5 minutes
 const DEFAULT_REVERSE_CACHE_EXPIRY_S = 30 * 60; // 30 minutes
+const DEFAULT_MAX_BULK_REVERSE_REQUEST = 20;
 
 const toMillis = (seconds: number) => seconds * 1000;
 
@@ -13,6 +14,7 @@ export class AppProperties {
   readonly isTestnet: boolean;
   readonly forwardResolveCacheExpiry: number;
   readonly reverseResolveCacheExpiry: number;
+  readonly maxBulkReverseRequest: number;
 
   constructor(config: ConfigService) {
     this.rpcUrl = config.get<string>('RPC_URL') ?? '';
@@ -27,5 +29,9 @@ export class AppProperties {
     const revSeconds =
       revRaw === '' ? DEFAULT_REVERSE_CACHE_EXPIRY_S : parseInt(revRaw);
     this.reverseResolveCacheExpiry = toMillis(revSeconds);
+
+    const bulkRaw = config.get<string>('MAX_BULK_REVERSE_REQUEST') ?? '';
+    this.maxBulkReverseRequest =
+      bulkRaw === '' ? DEFAULT_MAX_BULK_REVERSE_REQUEST : parseInt(bulkRaw);
   }
 }

@@ -1,11 +1,4 @@
-import {
-  BadRequestException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
-import { IResolverService } from '../resolver';
-import { http } from 'viem';
-import { mainnet } from 'viem/chains';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { createEnsPublicClient } from '@ensdomains/ensjs';
 import { InMemoryEnsCache } from './in-memory-ens.cache';
 import { CacheType, EnsCache } from './interface/ens.cache';
@@ -21,15 +14,10 @@ import {
   TWITTER_TEXT,
   URL_TEXT,
 } from './ens.utils';
-import { EnsAddressRecord, EnsProfile, EnsTextRecord } from './ens.types';
-import { EnsAddressesResponse, EnsTextsResponse } from './dto';
-import {
-  ResolveNameRequest,
-  ResolveNameResponse,
-} from 'src/resolver/types/resolve-name';
+import { EnsAddressRecord, EnsProfile, EnsTextRecord } from '../ens.types';
+import { EnsAddressesResponse, EnsTextsResponse } from './dto/ens-v1.response';
 import { EthClients } from 'src/web3/eth.clients';
-import { NameProtocol } from 'src/resolver/types/protocol';
-import { Blockchains, getBlockchainByChainId } from './coins';
+import { Blockchains } from './coins';
 
 // Default addresses to resolve
 // if the addresses parameter is not provided
@@ -57,8 +45,9 @@ const DefaultTexts: string[] = [
   NAME_TEXT,
 ];
 
+/** @deprecated Use EnsForwardResolver (v2) instead. */
 @Injectable()
-export class EnsResolver implements IResolverService {
+export class EnsResolver {
   private ensClient: ReturnType<typeof createEnsPublicClient>;
   private ensCache: EnsCache;
 
@@ -72,59 +61,6 @@ export class EnsResolver implements IResolverService {
 
   public clearCache(name: string, type: CacheType) {
     this.ensCache.clearCacheForName(name, [type]);
-  }
-
-  public async resolve(
-    name: string,
-    resolveRequest: ResolveNameRequest,
-  ): Promise<ResolveNameResponse> {
-    const chain_id =
-      resolveRequest.chain_id !== undefined
-        ? resolveRequest.chain_id
-        : mainnet.id;
-    const blockchain = getBlockchainByChainId(chain_id);
-
-    if (!blockchain) {
-      throw new BadRequestException(`Chain with id: ${chain_id} not supported`);
-    }
-
-    const coin_type = blockchain.coin_type;
-    const cachedAddresses = this.ensCache.getAddresses(name, [coin_type]);
-
-    const response: ResolveNameResponse = {
-      protocol: NameProtocol.ENS,
-      value: '',
-      chain_id: blockchain.chain_id,
-    };
-
-    if (cachedAddresses) {
-      response.value = cachedAddresses[0].address;
-      return response;
-    }
-
-    const address = await this.ensClient.getAddressRecord({
-      name: name,
-      coin: coin_type,
-    });
-
-    if (address) {
-      this.ensCache.setAddresses(
-        name,
-        [coin_type],
-        [
-          {
-            coin: coin_type,
-            address: address.value,
-            name: address.name,
-          },
-        ],
-      );
-    } else {
-      throw new NotFoundException();
-    }
-
-    response.value = address.value;
-    return response;
   }
 
   public async resolveContenthash(name: string) {

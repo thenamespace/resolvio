@@ -1,7 +1,12 @@
 import { EnsAddressRecord, EnsTextRecord } from '../ens.types';
-import { CacheEntry } from '../in-memory-forward-resolver.cache';
 
 export const FORWARD_RESOLVER_CACHE = Symbol('FORWARD_RESOLVER_CACHE');
+
+export type CacheEntry<T> = {
+  data: T | null;
+  isEmpty: boolean;
+  expiresAt: number;
+};
 
 export interface IForwardResolverCache {
   getText(name: string, key: string): CacheEntry<EnsTextRecord> | null;

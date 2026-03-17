@@ -1,8 +1,8 @@
 import { BadRequestException, Inject, Injectable } from '@nestjs/common';
 import { EthClients } from 'src/web3/eth.clients';
 import { chainNameForCoin, coinTypeForChain } from './supported-chains';
-import { FORWARD_RESOLVER_CACHE } from './interface/forward-resolver.cache';
-import type { IForwardResolverCache } from './interface/forward-resolver.cache';
+import { FORWARD_RESOLVER_CACHE } from './caches/forward-resolver.cache';
+import type { IForwardResolverCache } from './caches/forward-resolver.cache';
 import { EnsTextRecord } from './ens.types';
 import {
   AddressResult,

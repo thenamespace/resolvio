@@ -158,7 +158,7 @@ export const Blockchains: Record<ChainName, Blockchain> = {
     coin_type: 118,
   },
   [ChainName.Near]: { name: 'Near', chain_id: ChainIds.Near, coin_type: 397 },
-  [ChainName.Sui]: { name: 'Sui', chain_id: ChainIds.Sui, coin_type: 784 }, // ✅ chain_id fixed to 101 above
+  [ChainName.Sui]: { name: 'Sui', chain_id: ChainIds.Sui, coin_type: 784 },
   [ChainName.Aptos]: {
     name: 'Aptos',
     chain_id: ChainIds.Aptos,

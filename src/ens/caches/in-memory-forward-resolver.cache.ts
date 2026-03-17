@@ -1,13 +1,10 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { AppProperties } from 'src/app-properties/app-properties';
-import { EnsAddressRecord, EnsTextRecord } from './ens.types';
-import { IForwardResolverCache } from './interface/forward-resolver.cache';
-
-export type CacheEntry<T> = {
-  data: T | null;
-  isEmpty: boolean;
-  expiresAt: number;
-};
+import { EnsAddressRecord, EnsTextRecord } from '../ens.types';
+import {
+  CacheEntry,
+  IForwardResolverCache,
+} from './forward-resolver.cache';
 
 @Injectable()
 export class InMemoryForwardResolverCache implements IForwardResolverCache {
@@ -29,6 +26,7 @@ export class InMemoryForwardResolverCache implements IForwardResolverCache {
     this.expiry = appProperties.forwardResolveCacheExpiry;
     this.disabled = this.expiry === 0;
   }
+
   isEnabled(): boolean {
     return !this.disabled;
   }

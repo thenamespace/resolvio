@@ -1,0 +1,66 @@
+import { BadRequestException, Inject, Injectable } from '@nestjs/common';
+import type { Address } from 'viem';
+import { EthClients } from 'src/web3/eth.clients';
+import { AppProperties } from 'src/app-properties/app-properties';
+import { REVERSE_RESOLVER_CACHE } from './caches/reverse-resolver.cache';
+import type { IReverseResolverCache } from './caches/reverse-resolver.cache';
+import { ReverseResolveResult } from './dto';
+
+@Injectable()
+export class EnsReverseResolverV2 {
+  private readonly maxBulk: number;
+
+  constructor(
+    private readonly client: EthClients,
+    @Inject(REVERSE_RESOLVER_CACHE)
+    private readonly cache: IReverseResolverCache,
+    appProperties: AppProperties,
+  ) {
+    this.maxBulk = appProperties.maxBulkReverseRequest;
+  }
+
+  public async resolveOne(
+    address: Address,
+    noCache = false,
+  ): Promise<ReverseResolveResult> {
+    const key = address.toLowerCase();
+
+    if (!noCache && this.cache.isEnabled()) {
+      const cached = this.cache.get(key);
+      if (cached !== null) {
+        return {
+          address,
+          hasReverseRecord: cached.name !== null,
+          name: cached.name ?? undefined,
+        };
+      }
+    }
+
+    const result = await this.client.getEnsClient().getName({ address });
+    const name = result?.name ?? null;
+    this.cache.set(key, name);
+
+    return {
+      address,
+      hasReverseRecord: name !== null,
+      name: name ?? undefined,
+    };
+  }
+
+  public async resolveBulk(
+    addresses: Address[],
+    noCache = false,
+  ): Promise<ReverseResolveResult[]> {
+    if (addresses.length === 0) return [];
+    if (addresses.length > this.maxBulk) {
+      throw new BadRequestException(
+        `Bulk reverse supports up to ${this.maxBulk} addresses`,
+      );
+    }
+
+    // Deduplicate
+    const unique = [...new Set(addresses.map((a) => a.toLowerCase() as Address))];
+
+    return Promise.all(unique.map((addr) => this.resolveOne(addr, noCache)));
+  }
+}

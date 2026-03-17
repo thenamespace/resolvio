@@ -1,42 +1,5 @@
-import { AddressRecord, TextRecord } from 'src/types/ens-utils.dto';
 import type { Address, Hash } from 'viem';
 import { ApiProperty } from '@nestjs/swagger';
-
-export class EnsProfile {
-  @ApiProperty({
-    description: 'ENS name that was resolved',
-    example: 'vitalik.eth',
-  })
-  name: string;
-
-  @ApiProperty({
-    description: 'Array of text records associated with the ENS name',
-    type: [TextRecord],
-    required: false,
-  })
-  texts?: TextRecord[];
-
-  @ApiProperty({
-    description:
-      'Array of cryptocurrency addresses associated with the ENS name',
-    type: [AddressRecord],
-    required: false,
-  })
-  addresses?: AddressRecord[];
-
-  @ApiProperty({
-    description: 'Content hash associated with the ENS name (IPFS, IPNS, etc.)',
-    required: false,
-    example: 'ipfs://QmYwAPJzv5CZsnA625s3Xf2nemtYgPpHdWEz79ojWnPbdG',
-  })
-  contenthash?: string;
-
-  @ApiProperty({
-    description: 'Address of the ENS resolver contract',
-    example: '0x4976fb03C32e5B8cfe2b6cA31A7e9D2b6c7c5c5c5c',
-  })
-  resolver: string;
-}
 
 export class EnsTextRecord {
   @ApiProperty({
@@ -70,6 +33,42 @@ export class EnsAddressRecord {
     example: '0x742d35Cc6634C0532925a3b8D4C9db96C4b4d8b6',
   })
   address: string;
+}
+
+export class EnsProfile {
+  @ApiProperty({
+    description: 'ENS name that was resolved',
+    example: 'vitalik.eth',
+  })
+  name: string;
+
+  @ApiProperty({
+    description: 'Array of text records associated with the ENS name',
+    type: [EnsTextRecord],
+    required: false,
+  })
+  texts?: EnsTextRecord[];
+
+  @ApiProperty({
+    description:
+      'Array of cryptocurrency addresses associated with the ENS name',
+    type: [EnsAddressRecord],
+    required: false,
+  })
+  addresses?: EnsAddressRecord[];
+
+  @ApiProperty({
+    description: 'Content hash associated with the ENS name (IPFS, IPNS, etc.)',
+    required: false,
+    example: 'ipfs://QmYwAPJzv5CZsnA625s3Xf2nemtYgPpHdWEz79ojWnPbdG',
+  })
+  contenthash?: string;
+
+  @ApiProperty({
+    description: 'Address of the ENS resolver contract',
+    example: '0x4976fb03C32e5B8cfe2b6cA31A7e9D2b6c7c5c5c5c',
+  })
+  resolver: string;
 }
 
 export class EnsMetadata {

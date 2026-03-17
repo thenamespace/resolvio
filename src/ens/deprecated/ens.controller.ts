@@ -16,16 +16,18 @@ import {
   EnsNameRequest,
   EnsTextsRequest,
   NoCache,
-} from './dto';
+} from '../dto';
 import { CacheType } from './interface/ens.cache';
-import { ENS_ENDPOINTS } from '../docs/ens.endpoints';
+import { ENS_ENDPOINTS } from './ens.endpoints';
 import { ApiExcludeEndpoint, ApiTags } from '@nestjs/swagger';
 import { type Address } from 'viem';
 import { isEthereumAddress } from 'class-validator';
-import { EnsReverseResolver } from './ens-resverse.resolver';
+import { EnsReverseResolver } from './ens-reverse.resolver';
 
-// Deprecated, will be removed in
-// future iteration
+/**
+ * @deprecated Use /ens/v2 endpoints instead.
+ * Kept for backwards compatibility — will be removed in a future release.
+ */
 @ApiTags('Forward Resolution')
 @Controller('/ens/v1')
 export class EnsForwardResolutionController {
@@ -100,6 +102,10 @@ export class EnsForwardResolutionController {
   }
 }
 
+/**
+ * @deprecated Use /ens/v2 endpoints instead.
+ * Kept for backwards compatibility — will be removed in a future release.
+ */
 @ApiTags('Reverse Resolution')
 @Controller('/ens/v1')
 export class EnsReverseResolutionController {
