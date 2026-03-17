@@ -22,7 +22,7 @@ import {
   URL_TEXT,
 } from './ens.utils';
 import { EnsAddressRecord, EnsProfile, EnsTextRecord } from './ens.types';
-import { EnsAddressesResponse, EnsTextsResponse } from './dto/response.dto';
+import { EnsAddressesResponse, EnsTextsResponse } from './dto';
 import {
   ResolveNameRequest,
   ResolveNameResponse,

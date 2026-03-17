@@ -1,4 +1,4 @@
-import { INestApplication, ValidationPipe } from '@nestjs/common';
+import { BadRequestException, INestApplication, ValidationPipe } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import request from 'supertest';
 import { App } from 'supertest/types';
@@ -7,9 +7,18 @@ import { EnsForwardResolver } from '../src/ens/ens.forward-resolver';
 
 const NAME = 'artii.eth';
 
-const ETH_ADDRESS = '0x1D84ad46F1ec91b4Bb3208F645aD2fA7aBEc19f8';
+const EVM_ADDRESS = '0x1D84ad46F1ec91b4Bb3208F645aD2fA7aBEc19f8';
+const ETH_ADDRESS = EVM_ADDRESS;
 const BTC_ADDRESS = '1L2rwrhGFQNR8MpZkTaTjFcZK4mEqxScaA';
-const BASE_ADDRESS = '0x1D84ad46F1ec91b4Bb3208F645aD2fA7aBEc19f8';
+const BASE_ADDRESS = EVM_ADDRESS;
+
+// coin types per SLIP-0044 / EIP-2304
+const COIN_ETH   = 60;
+const COIN_BTC   = 0;
+const COIN_OP    = 2147483658;
+const COIN_BASE  = 2147492101;
+const COIN_MATIC = 2147483785;
+const COIN_CELO  = 2147484668;
 const AVATAR_URL = 'https://avatars.namespace.ninja/artii.eth_1750354393.png';
 const EMAIL = 'arthy@namespace.ninja';
 const CONTENTHASH = 'ipfs://bafybeid7gdzjx5gtm4cibfkmglflzyalyd3wknzfzxk64dxnq5jegfjgha';
@@ -204,6 +213,102 @@ describe('EnsForwardController (e2e)', () => {
         .expect(200);
 
       expect(res.body.addresses[0]).toEqual({ coin: 501, exists: false });
+    });
+
+    it('returns addresses for eth, btc, op, base, matic, celo by coin type', async () => {
+      const multiChainResponse = {
+        name: NAME,
+        addresses: [
+          { coin: COIN_ETH,   value: EVM_ADDRESS, exists: true },
+          { coin: COIN_BTC,   value: BTC_ADDRESS, exists: true },
+          { coin: COIN_OP,    value: EVM_ADDRESS, exists: true },
+          { coin: COIN_BASE,  value: EVM_ADDRESS, exists: true },
+          { coin: COIN_MATIC, value: EVM_ADDRESS, exists: true },
+          { coin: COIN_CELO,  value: EVM_ADDRESS, exists: true },
+        ],
+      };
+      resolver.resolveAddresses.mockResolvedValue(multiChainResponse);
+
+      const res = await request(app.getHttpServer())
+        .get(
+          `/ens/v2/addresses/${NAME}` +
+          `?coins=${COIN_ETH}&coins=${COIN_BTC}&coins=${COIN_OP}` +
+          `&coins=${COIN_BASE}&coins=${COIN_MATIC}&coins=${COIN_CELO}`,
+        )
+        .expect(200);
+
+      expect(res.body.addresses).toContainEqual({ coin: COIN_ETH,   value: EVM_ADDRESS, exists: true });
+      expect(res.body.addresses).toContainEqual({ coin: COIN_BTC,   value: BTC_ADDRESS, exists: true });
+      expect(res.body.addresses).toContainEqual({ coin: COIN_OP,    value: EVM_ADDRESS, exists: true });
+      expect(res.body.addresses).toContainEqual({ coin: COIN_BASE,  value: EVM_ADDRESS, exists: true });
+      expect(res.body.addresses).toContainEqual({ coin: COIN_MATIC, value: EVM_ADDRESS, exists: true });
+      expect(res.body.addresses).toContainEqual({ coin: COIN_CELO,  value: EVM_ADDRESS, exists: true });
+      expect(resolver.resolveAddresses).toHaveBeenCalledWith(
+        NAME,
+        expect.objectContaining({
+          coins: [COIN_ETH, COIN_BTC, COIN_OP, COIN_BASE, COIN_MATIC, COIN_CELO],
+        }),
+      );
+    });
+
+    it('returns addresses for eth, btc, op, base, matic, celo by chain name', async () => {
+      const multiChainResponse = {
+        name: NAME,
+        addresses: [
+          { coin: COIN_ETH,   value: EVM_ADDRESS, exists: true },
+          { coin: COIN_BTC,   value: BTC_ADDRESS, exists: true },
+          { coin: COIN_OP,    value: EVM_ADDRESS, exists: true },
+          { coin: COIN_BASE,  value: EVM_ADDRESS, exists: true },
+          { coin: COIN_MATIC, value: EVM_ADDRESS, exists: true },
+          { coin: COIN_CELO,  value: EVM_ADDRESS, exists: true },
+        ],
+      };
+      resolver.resolveAddresses.mockResolvedValue(multiChainResponse);
+
+      const res = await request(app.getHttpServer())
+        .get(`/ens/v2/addresses/${NAME}?chains=eth&chains=btc&chains=op&chains=base&chains=matic&chains=celo`)
+        .expect(200);
+
+      expect(res.body.addresses).toContainEqual({ coin: COIN_ETH,   value: EVM_ADDRESS, exists: true });
+      expect(res.body.addresses).toContainEqual({ coin: COIN_BTC,   value: BTC_ADDRESS, exists: true });
+      expect(res.body.addresses).toContainEqual({ coin: COIN_OP,    value: EVM_ADDRESS, exists: true });
+      expect(res.body.addresses).toContainEqual({ coin: COIN_BASE,  value: EVM_ADDRESS, exists: true });
+      expect(res.body.addresses).toContainEqual({ coin: COIN_MATIC, value: EVM_ADDRESS, exists: true });
+      expect(res.body.addresses).toContainEqual({ coin: COIN_CELO,  value: EVM_ADDRESS, exists: true });
+      expect(resolver.resolveAddresses).toHaveBeenCalledWith(
+        NAME,
+        expect.objectContaining({ chains: ['eth', 'btc', 'op', 'base', 'matic', 'celo'] }),
+      );
+    });
+
+    it('accepts comma-separated chain names', async () => {
+      resolver.resolveAddresses.mockResolvedValue({
+        name: NAME,
+        addresses: [
+          { coin: COIN_ETH,  value: EVM_ADDRESS, exists: true },
+          { coin: COIN_BTC,  value: BTC_ADDRESS, exists: true },
+          { coin: COIN_OP,   value: EVM_ADDRESS, exists: true },
+        ],
+      });
+
+      await request(app.getHttpServer())
+        .get(`/ens/v2/addresses/${NAME}?chains=eth,btc,op`)
+        .expect(200);
+
+      expect(resolver.resolveAddresses).toHaveBeenCalledWith(
+        NAME,
+        expect.objectContaining({ chains: ['eth', 'btc', 'op'] }),
+      );
+    });
+
+    it('returns 400 when both coins and chains are provided', async () => {
+      resolver.resolveAddresses.mockRejectedValue(
+        new BadRequestException('Provide either coins or chains, not both'),
+      );
+
+      await request(app.getHttpServer())
+        .get(`/ens/v2/addresses/${NAME}?coins=60&chains=eth`)
+        .expect(400);
     });
   });
 

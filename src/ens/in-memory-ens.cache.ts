@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { CacheType, EnsCache } from './interface/ens.cache';
 import { EnsAddressRecord, EnsProfile, EnsTextRecord } from './ens.types';
 import { Address, namehash } from 'viem';
-import { ReverseResolveResult } from './dto/response.dto';
+import { ReverseResolveResult } from './dto';
 import { AppProperties } from 'src/app-properties/app-properties';
 
 type CacheWrapper<T> = {

@@ -1,6 +1,6 @@
 import { Address } from 'viem';
 import { EnsAddressRecord, EnsProfile, EnsTextRecord } from '../ens.types';
-import { ReverseResolveResult } from '../dto/response.dto';
+import { ReverseResolveResult } from '../dto';
 
 export enum CacheType {
   ADDRESS = 'address',

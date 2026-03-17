@@ -9,15 +9,22 @@ import {
 } from '@nestjs/common';
 import { EnsForwardResolver } from './ens.forward-resolver';
 import {
+  ClearForwardCacheRequest,
   EnsAddressesRequest,
   EnsNameRequest,
   EnsTextsRequest,
   NoCache,
-} from './dto/requests.dto';
+} from './dto';
+import { SUPPORTED_CHAINS } from './supported-chains';
 
 @Controller('/ens/v2')
 export class EnsForwardController {
   constructor(private readonly resolver: EnsForwardResolver) {}
+
+  @Get('/chains')
+  public getSupportedChains() {
+    return SUPPORTED_CHAINS;
+  }
 
   @Get('/texts/:name')
   public getTexts(
@@ -45,7 +52,10 @@ export class EnsForwardController {
 
   @Delete('/cache/:name')
   @HttpCode(HttpStatus.NO_CONTENT)
-  public clearCache(@Param() nameReq: EnsNameRequest) {
-    return this.resolver.clearCache(nameReq.name);
+  public clearCache(
+    @Param() nameReq: EnsNameRequest,
+    @Query() query: ClearForwardCacheRequest,
+  ) {
+    return this.resolver.clearCache(nameReq.name, query.type);
   }
 }

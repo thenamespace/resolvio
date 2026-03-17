@@ -1,16 +1,19 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { BadRequestException, Inject, Injectable } from '@nestjs/common';
 import { EthClients } from 'src/web3/eth.clients';
+import { chainNameForCoin, coinTypeForChain } from './supported-chains';
 import { FORWARD_RESOLVER_CACHE } from './interface/forward-resolver.cache';
 import type { IForwardResolverCache } from './interface/forward-resolver.cache';
 import { EnsTextRecord } from './ens.types';
 import {
   AddressResult,
   ContenthashResult,
+  EnsAddressesRequest,
+  EnsTextsRequest,
   ForwardAddressesResponse,
+  ForwardCacheType,
   ForwardTextsResponse,
   TextResult,
-} from './dto/response.dto';
-import { EnsAddressesRequest, EnsTextsRequest } from './dto/requests.dto';
+} from './dto';
 
 const ETH_COIN_TYPE = 60;
 
@@ -29,6 +32,10 @@ export class EnsForwardResolver {
     const { keys = [], noCache = false } = request;
     const texts: TextResult[] = [];
     const missedKeys: string[] = [];
+
+    if (keys.length === 0) {
+        throw new BadRequestException("At least on text key required");
+    }
 
     if (!noCache && this.cache.isEnabled()) {
       for (const key of keys) {
@@ -68,7 +75,23 @@ export class EnsForwardResolver {
     name: string,
     request: EnsAddressesRequest,
   ): Promise<ForwardAddressesResponse> {
-    const requestedCoins = request.coins?.length ? request.coins : [ETH_COIN_TYPE];
+    if (request.coins?.length && request.chains?.length) {
+      throw new BadRequestException('Provide either coins or chains, not both');
+    }
+
+    let requestedCoins: number[];
+
+    if (request.chains?.length) {
+      const resolved = request.chains.map((chain) => {
+        const coin = coinTypeForChain(chain);
+        if (coin === null) throw new BadRequestException(`Unsupported chain: ${chain}`);
+        return coin;
+      });
+      requestedCoins = resolved;
+    } else {
+      requestedCoins = request.coins?.length ? request.coins : [ETH_COIN_TYPE];
+    }
+
     const noCache = request.noCache ?? false;
     const addresses: AddressResult[] = [];
     const missedCoins: number[] = [];
@@ -77,9 +100,10 @@ export class EnsForwardResolver {
       for (const coin of requestedCoins) {
         const cached = this.cache.getAddress(name, coin);
         if (cached !== null) {
+          const chain = chainNameForCoin(coin);
           addresses.push(cached.isEmpty
-            ? { coin, exists: false }
-            : { coin, value: cached.data!.address, exists: true });
+            ? { coin, chain, exists: false }
+            : { coin, chain, value: cached.data!.address, exists: true });
         } else {
           missedCoins.push(coin);
         }
@@ -97,9 +121,10 @@ export class EnsForwardResolver {
         this.cache.setAddress(name, coin, record
           ? { coin: record.id, name: record.name, address: record.value }
           : null);
+        const chain = chainNameForCoin(coin);
         addresses.push(record
-          ? { coin, value: record.value, exists: true }
-          : { coin, exists: false });
+          ? { coin, chain, value: record.value, exists: true }
+          : { coin, chain, exists: false });
       }
     }
 
@@ -134,7 +159,9 @@ export class EnsForwardResolver {
     // TODO: implement
   }
 
-  public clearCache(name: string): void {
+  public clearCache(name: string, type: ForwardCacheType = ForwardCacheType.ALL): void {
+    if (type === ForwardCacheType.TEXTS)     return this.cache.deleteText(name);
+    if (type === ForwardCacheType.ADDRESSES) return this.cache.deleteAddress(name);
     this.cache.deleteAll(name);
   }
 

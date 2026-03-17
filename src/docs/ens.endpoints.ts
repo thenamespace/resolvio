@@ -12,7 +12,7 @@ import {
   EnsTextRecord,
   EnsMetadata,
 } from '../ens/ens.types';
-import { BulkReverseResolveResult } from '../ens/dto/response.dto';
+import { BulkReverseResolveResult } from '../ens/dto';
 
 export const ENS_ENDPOINTS = {
   // Profile endpoint
