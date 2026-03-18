@@ -3,6 +3,7 @@ import { ENSModule } from './ens/ens.module';
 import { ConfigModule } from '@nestjs/config';
 import { ScheduleModule } from '@nestjs/schedule';
 import { AppPropertiesModule } from './app-properties/app-properties.module';
+import { LoggerModule } from './logger/logger.module';
 
 @Module({
   imports: [
@@ -11,6 +12,7 @@ import { AppPropertiesModule } from './app-properties/app-properties.module';
       envFilePath: '.env',
     }),
     AppPropertiesModule,
+    LoggerModule,
     ScheduleModule.forRoot(),
     ENSModule,
   ],

@@ -20,16 +20,22 @@ import {
   ProfileResponse,
   TextResult,
 } from './dto';
+import { ContextLogger, LoggerService } from 'src/logger/logger.service';
 
 const ETH_COIN_TYPE = 60;
 
 @Injectable()
 export class EnsForwardResolver {
+  private readonly logger: ContextLogger;
+
   constructor(
     private readonly client: EthClients,
     @Inject(FORWARD_RESOLVER_CACHE)
     private readonly cache: IForwardResolverCache,
-  ) {}
+    loggerService: LoggerService,
+  ) {
+    this.logger = loggerService.forContext(EnsForwardResolver.name);
+  }
 
   public async resolveTexts(
     name: string,
@@ -78,6 +84,7 @@ export class EnsForwardResolver {
       }
     }
 
+    this.logger.debug(`resolveTexts ${name} keys=[${keys.join(',')}] -> ${texts.length} records`);
     return { name, texts };
   }
 
@@ -148,6 +155,7 @@ export class EnsForwardResolver {
       }
     }
 
+    this.logger.debug(`resolveAddresses ${name} coins=[${requestedCoins.join(',')}] -> ${addresses.length} records`);
     return { name, addresses };
   }
 
@@ -172,6 +180,7 @@ export class EnsForwardResolver {
 
     const value = `${result.contentHash.protocolType}://${result.contentHash.decoded}`;
     this.cache.setContenthash(name, value);
+    this.logger.debug(`resolveContenthash ${name} -> ${value}`);
     return { value, exists: true };
   }
 
@@ -328,13 +337,17 @@ export class EnsForwardResolver {
       (a, b) => (coinOrder.get(a.coin) ?? 0) - (coinOrder.get(b.coin) ?? 0),
     );
 
-    return {
+    const response = {
       name,
       texts,
       addresses,
       contenthash: contenthash ?? { exists: false },
       resolver: resolverAddress,
     };
+    this.logger.debug(
+      `resolveProfile ${name} texts=${texts.length} addresses=${addresses.length} contenthash=${response.contenthash.exists}`,
+    );
+    return response;
   }
 
   public clearCache(

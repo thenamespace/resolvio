@@ -36,7 +36,11 @@ export class EnsForwardController {
   constructor(private readonly resolver: EnsForwardResolver) {}
 
   @Get('/chains')
-  @ApiOperation({ summary: 'List supported chains' })
+  @ApiOperation({
+    summary: 'List supported chains',
+    description:
+      'Returns all supported chains with their name and coinType. Use the chain name (e.g. `eth`, `base`) or coinType number (e.g. `60`, `2147492101`) when fetching addresses via `/addresses/:name` or `/profile/:name`.',
+  })
   @ApiResponse({ status: 200, description: 'Array of supported chain descriptors' })
   public getSupportedChains() {
     return SUPPORTED_CHAINS;

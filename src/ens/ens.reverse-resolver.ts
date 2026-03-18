@@ -5,18 +5,22 @@ import { AppProperties } from 'src/app-properties/app-properties';
 import { REVERSE_RESOLVER_CACHE } from './caches/reverse-resolver.cache';
 import type { IReverseResolverCache } from './caches/reverse-resolver.cache';
 import { ReverseResolveResult } from './dto';
+import { ContextLogger, LoggerService } from 'src/logger/logger.service';
 
 @Injectable()
 export class EnsReverseResolverV2 {
   private readonly maxBulk: number;
+  private readonly logger: ContextLogger;
 
   constructor(
     private readonly client: EthClients,
     @Inject(REVERSE_RESOLVER_CACHE)
     private readonly cache: IReverseResolverCache,
     appProperties: AppProperties,
+    loggerService: LoggerService,
   ) {
     this.maxBulk = appProperties.maxBulkReverseRequest;
+    this.logger = loggerService.forContext(EnsReverseResolverV2.name);
   }
 
   public async resolveOne(
@@ -40,6 +44,7 @@ export class EnsReverseResolverV2 {
     const name = result?.name ?? null;
     this.cache.set(key, name);
 
+    this.logger.debug(`resolveOne ${address} -> ${name ?? 'no record'}`);
     return {
       address,
       hasReverseRecord: name !== null,
