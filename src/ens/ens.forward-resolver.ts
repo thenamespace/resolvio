@@ -260,12 +260,13 @@ export class EnsForwardResolver {
     }
 
     // --- Single getRecords call for all misses ---
+
     if (missedKeys.length > 0 || missedCoins.length > 0 || fetchContenthash) {
       const result = await this.ens().getRecords({
         name,
         texts: missedKeys,
         coins: missedCoins,
-        contentHash: fetchContenthash,
+        ...(fetchContenthash ? { contentHash: true } : {}),
       });
 
       resolverAddress = result.resolverAddress;

@@ -15,6 +15,7 @@ export class AppProperties {
   readonly forwardResolveCacheExpiry: number;
   readonly reverseResolveCacheExpiry: number;
   readonly maxBulkReverseRequest: number;
+  readonly enableDocs: boolean;
 
   constructor(config: ConfigService) {
     this.rpcUrl = config.get<string>('RPC_URL') ?? '';
@@ -33,5 +34,7 @@ export class AppProperties {
     const bulkRaw = config.get<string>('MAX_BULK_REVERSE_REQUEST') ?? '';
     this.maxBulkReverseRequest =
       bulkRaw === '' ? DEFAULT_MAX_BULK_REVERSE_REQUEST : parseInt(bulkRaw);
+
+    this.enableDocs = config.get<string>('ENABLE_DOCS') === 'true';
   }
 }

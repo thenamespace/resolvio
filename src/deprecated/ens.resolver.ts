@@ -14,7 +14,7 @@ import {
   TWITTER_TEXT,
   URL_TEXT,
 } from './ens.utils';
-import { EnsAddressRecord, EnsProfile, EnsTextRecord } from '../ens.types';
+import { EnsAddressRecord, EnsProfile, EnsTextRecord } from '../ens/ens.types';
 import { EnsAddressesResponse, EnsTextsResponse } from './dto/ens-v1.response';
 import { EthClients } from 'src/web3/eth.clients';
 import { Blockchains } from './coins';

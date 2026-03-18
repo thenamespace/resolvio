@@ -1,12 +1,12 @@
 import { Module } from '@nestjs/common';
-import { EnsResolver } from './deprecated/ens.resolver';
-import { InMemoryEnsCache } from './deprecated/in-memory-ens.cache';
+import { EnsResolver } from '../deprecated/ens.resolver';
+import { InMemoryEnsCache } from '../deprecated/in-memory-ens.cache';
 import { Web3Module } from 'src/web3/web3.module';
 import {
   EnsForwardResolutionController,
   EnsReverseResolutionController,
-} from './deprecated/ens.controller';
-import { EnsReverseResolver } from './deprecated/ens-reverse.resolver';
+} from '../deprecated/ens.controller';
+import { EnsReverseResolver } from '../deprecated/ens-reverse.resolver';
 import { EnsForwardResolver } from './ens.forward-resolver';
 import { EnsForwardController } from './ens.forward-controller';
 import { EnsReverseResolverV2 } from './ens.reverse-resolver';

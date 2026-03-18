@@ -30,7 +30,7 @@ export const DEFAULT_PROFILE_CHAINS = [
 
 // Fallback when DEFAULT_PROFILE_CHAINS is empty
 export const DEFAULT_PROFILE_ADDRESSES = ['eth'];
-export const DEFAULT_PROFILE_CONTENTHASH = false;
+export const DEFAULT_PROFILE_CONTENTHASH = true;
 
 function splitParam(value: unknown): string[] {
   const arr = Array.isArray(value) ? value : [String(value)];
@@ -67,7 +67,13 @@ export class ProfileRequest extends NoCache {
    * Whether to include the contenthash record. Defaults to true.
    */
   @IsOptional()
-  @Transform(({ value }) => value === 'true' || value === true)
+  @Transform(({ obj }) => {
+    // Read the raw source value to avoid enableImplicitConversion converting
+    // the string 'false' (truthy non-empty string) to boolean true before this runs.
+    const raw = (obj as Record<string, unknown>)['contenthash'];
+    if (raw === undefined || raw === null) return undefined;
+    return raw !== 'false' && raw !== false;
+  })
   @IsBoolean()
   contenthash?: boolean;
 }

@@ -2,13 +2,13 @@ import { INestApplication, ValidationPipe } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { Test } from '@nestjs/testing';
 import { App } from 'supertest/types';
-import { AppPropertiesModule } from '../../src/app-properties/app-properties.module';
-import { ENSModule } from '../../src/ens/ens.module';
+import { AppPropertiesModule } from '../src/app-properties/app-properties.module';
+import { ENSModule } from '../src/ens/ens.module';
 import {
   AddressResult,
   ContenthashResult,
   TextResult,
-} from '../../src/ens/dto';
+} from '../src/ens/dto';
 
 // ---------------------------------------------------------------------------
 // TestEnsProfile
@@ -54,7 +54,7 @@ export const COIN_BTC = 0;
 export const COIN_OP = 2147483658;
 export const COIN_BASE = 2147492101;
 export const COIN_MATIC = 2147483785;
-export const COIN_CELO = 2147484668;
+export const COIN_CELO = 2147525868; // 0x80000000 + 42220 (Celo chainId)
 
 // ---------------------------------------------------------------------------
 // artii.eth — on-chain name
@@ -66,7 +66,8 @@ export const onchainProfile: TestEnsProfile = buildProfile({
   texts: [
     { key: 'avatar',      value: 'https://avatars.namespace.ninja/artii.eth_1750354393.png', exists: true },
     { key: 'email',       value: 'arthy@namespace.ninja', exists: true },
-    { key: 'unknown', exists: false },
+    { key: 'com.twitter', exists: false },
+    { key: 'unknown',     exists: false },
   ],
   addresses: [
     {
@@ -117,15 +118,15 @@ export const onchainProfile: TestEnsProfile = buildProfile({
 // ---------------------------------------------------------------------------
 
 export const offchainProfile: TestEnsProfile = buildProfile({
-  name: 'arti.offchainsub.eth', // placeholder — user will supply offchain name + records later,
-   texts: [
-    { key: 'avatar',      value: 'https://avatars.namespace.ninja/artii.eth_1750354393.png', exists: true },
+  name: 'arti.offchainsub.eth',
+  texts: [
+    { key: 'avatar',      exists: false },
     { key: 'header',      exists: false },
-    { key: 'name',        exists: false },
-    { key: 'description', exists: false },
-    { key: 'url',         exists: false },
+    { key: 'name',        value: 'Arti', exists: true },
+    { key: 'description', value: 'I do coding and stuff', exists: true },
+    { key: 'url',         value: 'https://app.namespace.ninja', exists: true },
     { key: 'location',    exists: false },
-    { key: 'email',       value: 'arthy@namespace.ninja', exists: true },
+    { key: 'email',       exists: false }, // stored as 'mail' in the offchain resolver
     { key: 'com.twitter', exists: false },
     { key: 'com.discord', exists: false },
     { key: 'com.github',  exists: false },
@@ -136,24 +137,6 @@ export const offchainProfile: TestEnsProfile = buildProfile({
     {
       coin: COIN_ETH,
       chain: 'eth',
-      value: '0x1D84ad46F1ec91b4Bb3208F645aD2fA7aBEc19f8',
-      exists: true,
-    },
-    {
-      coin: COIN_BTC,
-      chain: 'btc',
-      value: '1L2rwrhGFQNR8MpZkTaTjFcZK4mEqxScaA',
-      exists: true,
-    },
-    {
-      coin: COIN_OP,
-      chain: 'op',
-      value: '0x1D84ad46F1ec91b4Bb3208F645aD2fA7aBEc19f8',
-      exists: true,
-    },
-    {
-      coin: COIN_BASE,
-      chain: 'base',
       value: '0x1D84ad46F1ec91b4Bb3208F645aD2fA7aBEc19f8',
       exists: true,
     },

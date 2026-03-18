@@ -93,8 +93,9 @@ describe('GET /ens/v2/addresses/:name', () => {
     expect(res.body.addresses).toContainEqual(
       expect.objectContaining(offchainProfile.getAddress('eth')),
     );
+    // btc is not set in the offchain resolver
     expect(res.body.addresses).toContainEqual(
-      expect.objectContaining(offchainProfile.getAddress('btc')),
+      expect.objectContaining({ chain: 'btc', coin: COIN_BTC, exists: false }),
     );
   });
 

@@ -12,6 +12,6 @@ export const swaggerConfig = new DocumentBuilder()
     'arti@namespace.ninja',
   )
   .setLicense('MIT', 'https://opensource.org/licenses/MIT')
-  .addTag('ENS', 'Ethereum Name Service resolution endpoints')
-  .addTag('Resolution', 'General resolution endpoints')
+  .addTag('Forward Resolution', 'Resolve ENS names to addresses, text records, and content hashes')
+  .addTag('Reverse Resolution', 'Resolve Ethereum addresses to ENS names')
   .build();

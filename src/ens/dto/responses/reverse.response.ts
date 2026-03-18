@@ -4,7 +4,7 @@ import { ApiProperty } from '@nestjs/swagger';
 export class ReverseResolveResult {
   @ApiProperty({
     description: 'Primary ENS name for this address (if reverse record is set)',
-    example: 'vitalik.eth',
+    example: 'artii.eth',
     required: false,
   })
   name?: string;

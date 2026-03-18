@@ -5,7 +5,7 @@ import { ApiProperty } from '@nestjs/swagger';
 export class EnsNameRequest {
   @ApiProperty({
     description: 'ENS name to resolve',
-    example: 'vitalik.eth',
+    example: 'artii.eth',
     minLength: 6,
     maxLength: 256,
   })

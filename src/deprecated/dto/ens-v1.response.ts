@@ -1,4 +1,4 @@
-import { EnsAddressRecord, EnsTextRecord } from '../../ens.types';
+import { EnsAddressRecord, EnsTextRecord } from '../../ens/ens.types';
 
 export enum EnsNameType {
   Classic = 'classic',

@@ -1,5 +1,5 @@
 import { arbitrum, base, optimism } from 'viem/chains';
-import { OffchainLookupParams } from '../ens.types';
+import { OffchainLookupParams } from '../ens/ens.types';
 import { Address, Hex } from 'viem';
 
 export const convertEVMChainIdToCoinType = (chainId: number) => {

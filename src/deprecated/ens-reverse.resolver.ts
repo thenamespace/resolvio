@@ -1,7 +1,7 @@
 import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { EthClients } from 'src/web3/eth.clients';
-import { BulkReverseResolveRequest, BulkReverseResolveResult } from '../dto';
+import { BulkReverseResolveRequest, BulkReverseResolveResult } from '../ens/dto';
 import { mainnet } from 'viem/chains';
 import { Address, toCoinType } from 'viem';
 import { SUPPORTED_REVERSE_REGISTRAR_CHAINS } from './constants';

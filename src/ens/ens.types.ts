@@ -38,7 +38,7 @@ export class EnsAddressRecord {
 export class EnsProfile {
   @ApiProperty({
     description: 'ENS name that was resolved',
-    example: 'vitalik.eth',
+    example: 'artii.eth',
   })
   name: string;
 

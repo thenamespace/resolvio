@@ -26,7 +26,7 @@ describe('GET /ens/v2/profile/:name', () => {
     expect(res.body.addresses).toContainEqual(
       expect.objectContaining(onchainProfile.getAddress('eth')),
     );
-    expect(res.body.contenthash).toEqual({ exists: false }); // contenthash=false by default
+    expect(res.body.contenthash).toEqual(onchainProfile.contenthash); // contenthash fetched by default
   });
 
   // --- onchain — explicit params ---
@@ -122,8 +122,9 @@ describe('GET /ens/v2/profile/:name', () => {
     expect(res.body.addresses).toContainEqual(
       expect.objectContaining(offchainProfile.getAddress('eth')),
     );
+    // btc is not set in the offchain resolver
     expect(res.body.addresses).toContainEqual(
-      expect.objectContaining(offchainProfile.getAddress('btc')),
+      expect.objectContaining({ chain: 'btc', exists: false }),
     );
   });
 

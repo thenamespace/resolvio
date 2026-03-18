@@ -11,8 +11,8 @@ import {
   EnsAddressRecord,
   EnsTextRecord,
   EnsMetadata,
-} from '../ens.types';
-import { BulkReverseResolveResult } from '../dto';
+} from '../ens/ens.types';
+import { BulkReverseResolveResult } from '../ens/dto';
 
 export const ENS_ENDPOINTS = {
   // Profile endpoint
@@ -25,8 +25,8 @@ export const ENS_ENDPOINTS = {
     tags: ApiTags('Forward Resolution'),
     param: ApiParam({
       name: 'name',
-      description: 'ENS name (e.g., "vitalik.eth")',
-      example: 'vitalik.eth',
+      description: 'ENS name (e.g., "artii.eth")',
+      example: 'artii.eth',
     }),
     query: ApiQuery({
       name: 'noCache',
@@ -59,8 +59,8 @@ export const ENS_ENDPOINTS = {
     tags: ApiTags('Forward Resolution'),
     param: ApiParam({
       name: 'name',
-      description: 'ENS name (e.g., "vitalik.eth")',
-      example: 'vitalik.eth',
+      description: 'ENS name (e.g., "artii.eth")',
+      example: 'artii.eth',
     }),
     query: ApiQuery({
       name: 'coins',
@@ -100,8 +100,8 @@ export const ENS_ENDPOINTS = {
     tags: ApiTags('Forward Resolution'),
     param: ApiParam({
       name: 'name',
-      description: 'ENS name (e.g., "vitalik.eth")',
-      example: 'vitalik.eth',
+      description: 'ENS name (e.g., "artii.eth")',
+      example: 'artii.eth',
     }),
     query: ApiQuery({
       name: 'keys',
@@ -141,8 +141,8 @@ export const ENS_ENDPOINTS = {
     tags: ApiTags('Forward Resolution'),
     param: ApiParam({
       name: 'name',
-      description: 'ENS name (e.g., "vitalik.eth")',
-      example: 'vitalik.eth',
+      description: 'ENS name (e.g., "artii.eth")',
+      example: 'artii.eth',
     }),
     response: ApiResponse({
       status: 200,
@@ -169,8 +169,8 @@ export const ENS_ENDPOINTS = {
     tags: ApiTags('Forward Resolution'),
     param: ApiParam({
       name: 'name',
-      description: 'ENS name (e.g., "vitalik.eth")',
-      example: 'vitalik.eth',
+      description: 'ENS name (e.g., "artii.eth")',
+      example: 'artii.eth',
     }),
     response: ApiResponse({
       status: 200,
@@ -205,8 +205,8 @@ export const ENS_ENDPOINTS = {
     tags: ApiTags('ENS'),
     param: ApiParam({
       name: 'name',
-      description: 'ENS name (e.g., "vitalik.eth")',
-      example: 'vitalik.eth',
+      description: 'ENS name (e.g., "artii.eth")',
+      example: 'artii.eth',
     }),
     response: ApiResponse({
       status: 200,
@@ -216,7 +216,7 @@ export const ENS_ENDPOINTS = {
         properties: {
           message: {
             type: 'string',
-            example: 'Cache cleared for vitalik.eth',
+            example: 'Cache cleared for artii.eth',
           },
         },
       },
