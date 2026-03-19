@@ -20,7 +20,12 @@ async function bootstrap() {
 
   if (appProperties.enableDocs) {
     const document = SwaggerModule.createDocument(app, swaggerConfig);
-    SwaggerModule.setup('api-docs', app, document);
+    SwaggerModule.setup('api-docs', app, document, {
+      swaggerOptions: {
+        docExpansion: 'list',
+        defaultModelsExpandDepth: -1,
+      },
+    });
     app.getHttpAdapter().get('/api-docs.json', (_req, res) => res.json(document));
   }
 
