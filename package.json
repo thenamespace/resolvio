@@ -7,22 +7,14 @@
   "license": "UNLICENSED",
   "scripts": {
     "build": "nest build",
-    "build:frontend": "npm --prefix landing-page run build && rm -rf public && cp -r landing-page/dist public",
-    "build:all": "npm run build && npm run build:frontend",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "nest start",
     "start:dev": "nest start --watch",
-    "start:debug": "nest start --debug --watch",
     "start:prod": "node dist/main",
-    "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
-    "test": "jest",
-    "test:watch": "jest --watch",
-    "test:cov": "jest --coverage",
-    "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json"
   },
   "dependencies": {
-    "@ensdomains/ensjs": "^4.2.0",
+    "@ensdomains/ensjs": "^4.2.2",
     "@nestjs/common": "^11.0.1",
     "@nestjs/config": "^4.0.2",
     "@nestjs/core": "^11.0.1",
@@ -36,7 +28,7 @@
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1",
     "swagger-ui-express": "^5.0.1",
-    "viem": "^2.45.0"
+    "viem": "^2.47.4"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.2.0",
