@@ -1,4 +1,4 @@
-# Resolvio — Name Resolver API
+# Resolvio — Name Resolver API 
 
 ENS resolution service built with [NestJS](https://nestjs.com/).
 
