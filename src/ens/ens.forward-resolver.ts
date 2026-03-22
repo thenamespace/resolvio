@@ -1,4 +1,5 @@
 import { BadRequestException, Inject, Injectable } from '@nestjs/common';
+import { AppProperties } from 'src/app-properties/app-properties';
 import { EthClients } from 'src/web3/eth.clients';
 import { chainNameForCoin, coinTypeForChain } from './supported-chains';
 import { FORWARD_RESOLVER_CACHE } from './caches/forward-resolver.cache';
@@ -27,14 +28,17 @@ const ETH_COIN_TYPE = 60;
 @Injectable()
 export class EnsForwardResolver {
   private readonly logger: ContextLogger;
+  private readonly maxBulkProfileRequest: number;
 
   constructor(
     private readonly client: EthClients,
     @Inject(FORWARD_RESOLVER_CACHE)
     private readonly cache: IForwardResolverCache,
     loggerService: LoggerService,
+    appProperties: AppProperties,
   ) {
     this.logger = loggerService.forContext(EnsForwardResolver.name);
+    this.maxBulkProfileRequest = appProperties.maxBulkProfileRequest;
   }
 
   public async resolveTexts(
@@ -348,6 +352,18 @@ export class EnsForwardResolver {
       `resolveProfile ${name} texts=${texts.length} addresses=${addresses.length} contenthash=${response.contenthash.exists}`,
     );
     return response;
+  }
+
+  public resolveBulkProfiles(
+    names: string[],
+    request: ProfileRequest,
+  ): Promise<ProfileResponse[]> {
+    if (names.length > this.maxBulkProfileRequest) {
+      throw new BadRequestException(
+        `Bulk profile supports up to ${this.maxBulkProfileRequest} names`,
+      );
+    }
+    return Promise.all(names.map((name) => this.resolveProfile(name, request)));
   }
 
   public clearCache(

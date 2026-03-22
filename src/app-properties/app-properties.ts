@@ -5,6 +5,7 @@ import { ConfigService } from '@nestjs/config';
 const DEFAULT_FORWARD_CACHE_EXPIRY_S = 5 * 60; // 5 minutes
 const DEFAULT_REVERSE_CACHE_EXPIRY_S = 30 * 60; // 30 minutes
 const DEFAULT_MAX_BULK_REVERSE_REQUEST = 20;
+const DEFAULT_MAX_BULK_PROFILE_REQUEST = 20;
 
 const toMillis = (seconds: number) => seconds * 1000;
 
@@ -15,6 +16,7 @@ export class AppProperties {
   readonly forwardResolveCacheExpiry: number;
   readonly reverseResolveCacheExpiry: number;
   readonly maxBulkReverseRequest: number;
+  readonly maxBulkProfileRequest: number;
   readonly enableDocs: boolean;
 
   constructor(config: ConfigService) {
@@ -34,6 +36,10 @@ export class AppProperties {
     const bulkRaw = config.get<string>('MAX_BULK_REVERSE_REQUEST') ?? '';
     this.maxBulkReverseRequest =
       bulkRaw === '' ? DEFAULT_MAX_BULK_REVERSE_REQUEST : parseInt(bulkRaw);
+
+    const bulkProfileRaw = config.get<string>('MAX_BULK_PROFILE_REQUEST') ?? '';
+    this.maxBulkProfileRequest =
+      bulkProfileRaw === '' ? DEFAULT_MAX_BULK_PROFILE_REQUEST : parseInt(bulkProfileRaw);
 
     this.enableDocs = config.get<string>('ENABLE_DOCS') === 'true';
   }

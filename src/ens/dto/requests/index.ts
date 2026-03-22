@@ -6,3 +6,4 @@ export * from './clear-cache.request';
 export * from './reverse.request';
 export * from './reverse-bulk.request';
 export * from './profile.request';
+export * from './bulk-profile.request';
