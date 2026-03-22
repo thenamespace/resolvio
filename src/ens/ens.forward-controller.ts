@@ -16,6 +16,7 @@ import {
 } from '@nestjs/swagger';
 import { EnsForwardResolver } from './ens.forward-resolver';
 import {
+  BulkProfileRequest,
   ClearForwardCacheRequest,
   EnsAddressesRequest,
   EnsNameRequest,
@@ -95,6 +96,22 @@ export class EnsForwardController {
     @Query() query: NoCache,
   ) {
     return this.resolver.resolveContenthash(nameReq.name, query.noCache);
+  }
+
+  @Get('/profile/bulk')
+  @ApiOperation({
+    summary: 'Resolve profiles for multiple ENS names in parallel',
+    description: 'Resolves each name concurrently. Accepts the same query params as /profile/:name, applied uniformly to all names.',
+  })
+  @ApiQuery({ name: 'names', required: true, description: 'Comma-separated ENS names', example: 'artii.eth,vitalik.eth' })
+  @ApiQuery({ name: 'texts', required: false, description: 'Comma-separated text keys', example: 'avatar,com.twitter' })
+  @ApiQuery({ name: 'addresses', required: false, description: 'Comma-separated chain names', example: 'eth,base,btc' })
+  @ApiQuery({ name: 'contenthash', required: false, type: Boolean })
+  @ApiQuery({ name: 'noCache', required: false, type: Boolean })
+  @ApiResponse({ status: 200, type: [ProfileResponse] })
+  public getBulkProfiles(@Query() query: BulkProfileRequest) {
+    const { names, ...profileRequest } = query;
+    return this.resolver.resolveBulkProfiles(names, profileRequest);
   }
 
   @Get('/profile/:name')
