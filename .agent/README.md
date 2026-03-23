@@ -22,6 +22,7 @@ view_file .agent/skills/resolvio/SKILL.md
 
 ## Quick Reference
 
-**Production API**: https://resolvio.namespace.ninja  
+**Production API**: https://api.resolvio.xyz
 **Documentation**: https://docs.namespace.ninja/api-reference/resolvio/  
-**Swagger UI**: https://resolvio.namespace.ninja/api/docs
+**Swagger UI**: https://api.resolvio.xyz/api-docs
+**OpenApi JSON**: https://api.resolvio.xyz/api-docs.json

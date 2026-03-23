@@ -1,246 +1,164 @@
 ---
 name: Resolvio
-description: Interact with Resolvio - an ENS (Ethereum Name Service) resolution API. Resolve ENS names to addresses, perform reverse lookups, and fetch profile data.
+description: Interact with Resolvio - an ENS resolution API. Resolve ENS names to addresses/texts/contenthash, bulk-resolve profiles, and reverse-resolve addresses to names.
 ---
 
 # Resolvio API Skill
 
-This skill enables AI agents to interact with **Resolvio**, an ENS (Ethereum Name Service) resolution API.
+**Base URL**: `https://api.resolvio.xyz`  
+**Swagger**: `https://api.resolvio.xyz/api-docs`  
+**OpenAPI JSON**: `https://api.resolvio.xyz/api-docs.json`
 
-## What is Resolvio?
+---
 
-Resolvio is a REST API dedicated to **ENS resolution only**. It provides:
-- **Forward resolution**: ENS name → addresses, texts, contenthash
-- **Reverse resolution**: Ethereum address → primary ENS name
-- **Multi-chain support**: ETH, BTC, SOL, OP, Base, ARB addresses via coin types
-- **Profile data**: Complete ENS profiles with all records
+## Forward Resolution
 
-## Production API
+### GET /ens/v2/profile/:name
 
-- **Base URL**: `https://resolvio.namespace.ninja`
-- **Documentation**: https://docs.namespace.ninja/api-reference/resolvio/
-- **Swagger**: https://resolvio.namespace.ninja/api/docs
+Full ENS profile in a single RPC call. Default response includes 12 text keys, 8 chains, and contenthash.
 
-## Core Capabilities
-
-### 1. Get ENS Profile
-
-Fetch complete ENS profile including addresses, text records, and contenthash.
-
-**Endpoint**: `GET /ens/v1/profile/:name`
-
-**Example**:
-```bash
-curl https://resolvio.namespace.ninja/ens/v1/profile/vitalik.eth
+```
+GET /ens/v2/profile/vitalik.eth
 ```
 
-**Response**:
+Optional query params:
+- `texts` — comma-separated text keys, e.g. `avatar,com.twitter`
+- `addresses` — chain names or coinType numbers, e.g. `eth,base,60`
+- `contenthash` — `true` or `false` (default: `true`)
+- `noCache` — `true` bypasses in-memory cache
+
+Response:
 ```json
 {
   "name": "vitalik.eth",
-  "addresses": [
-    { "coin": 60, "name": "eth", "address": "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045" }
-  ],
+  "resolver": "0x231b0Ee14048e9dCcD1d247744d114a4EB5E8E63",
   "texts": [
-    { "key": "avatar", "value": "..." },
-    { "key": "com.twitter", "value": "..." }
+    { "key": "avatar", "value": "https://...", "exists": true },
+    { "key": "com.twitter", "exists": false }
   ],
-  "contenthash": "ipfs://...",
-  "resolver": "0x..."
+  "addresses": [
+    { "coin": 60, "chain": "eth", "value": "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045", "exists": true },
+    { "coin": 0,  "chain": "btc", "exists": false }
+  ],
+  "contenthash": { "value": "ipfs://bafy...", "exists": true }
 }
 ```
 
-### 2. Get Specific Addresses
+`exists: false` records are always returned — no key is silently dropped. When `exists` is `false`, `value` is absent.
 
-Fetch cryptocurrency addresses for specific coin types.
+---
 
-**Endpoint**: `GET /ens/v1/addresses/:name?coins[]=60&coins[]=0`
+### GET /ens/v2/profile/bulk
 
-**Common Coin Types**:
-- `60` = Ethereum (ETH)
-- `0` = Bitcoin (BTC)
-- `501` = Solana (SOL)
-- `2147483658` = Optimism (OP)
-- `2147492101` = Base
-- `2147525809` = Arbitrum (ARB)
+Resolve profiles for multiple names in parallel. Accepts the same query params as `/profile/:name`, applied uniformly to all names. Default max: 20 names.
 
-**Example**:
-```bash
-curl "https://resolvio.namespace.ninja/ens/v1/addresses/vitalik.eth?coins[]=60&coins[]=501"
+```
+GET /ens/v2/profile/bulk?names=vitalik.eth,artii.eth
 ```
 
-### 3. Get Text Records
+Required: `names` (comma-separated, max 20).
 
-Fetch specific text records (social links, avatar, etc.).
+Response: array of profile objects (same shape as single profile).
 
-**Endpoint**: `GET /ens/v1/texts/:name?keys[]=avatar&keys[]=com.twitter`
+**Tip**: Always prefer bulk over sequential single-profile calls when resolving more than one name.
 
-**Common Text Keys**:
-- `avatar` - Profile picture
-- `description` - Bio/description
-- `com.twitter` - Twitter handle
-- `com.github` - GitHub username
-- `com.discord` - Discord username
-- `url` - Website URL
-- `email` - Email address
+---
 
-**Example**:
-```bash
-curl "https://resolvio.namespace.ninja/ens/v1/texts/vitalik.eth?keys[]=avatar&keys[]=com.twitter"
+### GET /ens/v2/texts/:name
+
+Fetch specific text records only.
+
+```
+GET /ens/v2/texts/vitalik.eth?keys=avatar,description,com.twitter
 ```
 
-### 4. Reverse Resolution (Bulk)
+Required: `keys` (comma-separated).
 
-Convert multiple Ethereum addresses to their primary ENS names.
+Common keys: `avatar`, `name`, `description`, `url`, `email`, `location`, `com.twitter`, `com.github`, `com.discord`, `org.telegram`, `com.youtube`
 
-**Endpoint**: `POST /ens/v1/reverse/bulk`
+---
 
-**Example**:
-```bash
-curl -X POST https://resolvio.namespace.ninja/ens/v1/reverse/bulk \
-  -H "Content-Type: application/json" \
-  -d '{
-    "addresses": [
-      "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045",
-      "0x225f137127d9067788314bc7fcc1f36746a3c3B5"
-    ]
-  }'
+### GET /ens/v2/addresses/:name
+
+Fetch addresses by chain name or coinType. Use `chains` **or** `coins`, not both.
+
+```
+GET /ens/v2/addresses/vitalik.eth?chains=eth,base,btc,sol
+GET /ens/v2/addresses/vitalik.eth?coins=60,2147492101
 ```
 
-**Response**:
+Common chains: `eth` (60), `btc` (0), `sol` (501), `base` (2147492101), `op` (2147483658), `arb1` (2147525809), `matic` (2147483785)
+
+Use `GET /ens/v2/chains` to get the full list with both name and coinType.
+
+---
+
+### GET /ens/v2/contenthash/:name
+
+```
+GET /ens/v2/contenthash/vitalik.eth
+```
+
+Response: `{ "value": "ipfs://bafy...", "exists": true }` or `{ "exists": false }`.
+
+---
+
+### GET /ens/v2/chains
+
+Lists all supported chains with `coin` (coinType integer) and `name` (chain string). Use `name` in `?chains=` params and `coin` in `?coins=` params — they refer to the same chain.
+
+---
+
+### DELETE /ens/v2/cache/:name
+
+Clears cached records for a name. Optional `?type=texts|addresses|all`.
+
+---
+
+## Reverse Resolution
+
+### GET /ens/v2/reverse/:address
+
+Resolve a single address to its primary ENS name.
+
+```
+GET /ens/v2/reverse/0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045
+```
+
+Response when found: `{ "address": "0xd8dA...", "hasReverseRecord": true, "name": "vitalik.eth" }`  
+Response when not found: `{ "address": "0x...", "hasReverseRecord": false }`
+
+---
+
+### GET /ens/v2/reverse/bulk
+
+Resolve multiple addresses in one batched RPC call. Default max: 20 addresses.
+
+```
+GET /ens/v2/reverse/bulk?addresses=0xd8dA...,0x225f...
+```
+
+Required: `addresses` (comma-separated, max 20). Duplicates are deduplicated automatically.
+
+Response:
 ```json
-{
-  "result": [
-    {
-      "address": "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045",
-      "name": "vitalik.eth",
-      "hasReverseRecord": true
-    }
-  ]
-}
-```
-
-### 5. Reverse Resolution (Single)
-
-Resolve a single Ethereum address to its primary ENS name.
-
-**Endpoint**: `POST /ens/v1/reverse/single/:address`
-
-**Example**:
-```bash
-curl -X POST https://resolvio.namespace.ninja/ens/v1/reverse/single/0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045
-```
-
-## Common Use Cases
-
-### Use Case 1: Display User Profile
-When you need to show a complete ENS profile:
-```
-GET /ens/v1/profile/vitalik.eth
-```
-
-### Use Case 2: Get Ethereum Address from Name
-When you need to resolve a name to an ETH address:
-```
-GET /ens/v1/addresses/vitalik.eth?coins[]=60
-```
-Extract `addresses[0].address` from response.
-
-### Use Case 3: Show ENS Name for Address
-When you have an address and want to display the ENS name:
-```
-POST /ens/v1/reverse/single/0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045
-```
-
-### Use Case 4: Get Social Links
-When you want to fetch social media handles:
-```
-GET /ens/v1/texts/vitalik.eth?keys[]=com.twitter&keys[]=com.github&keys[]=url
-```
-
-### Use Case 5: Multi-Chain Address Resolution
-When you need addresses for multiple blockchains:
-```
-GET /ens/v1/addresses/vitalik.eth?coins[]=60&coins[]=0&coins[]=501
-```
-Returns ETH, BTC, and SOL addresses.
-
-### Use Case 6: Dashboard UX - Display Human-Readable Names
-When building a dashboard that shows multiple addresses and you want to display ENS names for better UX:
-```
-POST /ens/v1/reverse/bulk
 {
   "addresses": [
-    "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045",
-    "0x225f137127d9067788314bc7fcc1f36746a3c3B5",
-    ...
+    { "address": "0xd8dA...", "hasReverseRecord": true,  "name": "vitalik.eth" },
+    { "address": "0x225f...", "hasReverseRecord": false }
   ]
 }
 ```
-**Tip**: Always use bulk resolution instead of individual calls when displaying multiple addresses - it's much more efficient and reduces API load.
 
-## Query Parameters
+**Tip**: Always use bulk when resolving more than one address — it batches the RPC call.
 
-### Cache Control
-Add `noCache=true` to any GET endpoint to bypass cache:
-```
-GET /ens/v1/profile/vitalik.eth?noCache=true
-```
+---
 
-### Chain ID (for reverse resolution)
-Specify chain for reverse resolution (defaults to mainnet):
-```json
-{
-  "addresses": ["0x..."],
-  "chain_id": 1
-}
-```
+## Key behaviours
 
-## API Limitations
-
-### Bulk Resolution Limits
-- **Maximum addresses per request**: 20 (hard limit enforced)
-- **Error on excess**: Returns 400 error if >20 addresses provided
-- **Best practice**: For >20 addresses, split into batches of 20
-
-### Rate Limiting
-- **Current status**: No rate limiting enforced
-- **Fair use policy**: Please avoid excessive requests that may impact service availability
-- **Future**: Rate limits may be added; will be documented when implemented
-
-### Caching
-- **Default cache TTL**: 5 minutes
-- **Bypass cache**: Use `noCache=true` query parameter
-- **Cache type**: In-memory (resets on service restart)
-
-### Chain Support
-- **Forward resolution**: Ethereum mainnet only (other chains via coin types)
-- **Reverse resolution**: Ethereum mainnet (chain_id: 1)
-- **Multi-chain addresses**: Via coin type parameter (see coin types list)
-
-### Known Limitations
-- ENS-only (other naming services not yet supported)
-- No WebSocket/real-time updates
-- No API key authentication (public access)
-- No persistent storage (cache is ephemeral)
-
-## Error Handling
-
-- **404**: ENS name doesn't exist or has no resolver
-- **400**: Invalid request (malformed address, invalid coin type)
-- **Empty arrays**: ENS name exists but no records set for requested types
-
-## Tips for Agents
-
-1. **Always use production URL** for live queries: `https://resolvio.namespace.ninja`
-2. **Default coin type is 60 (ETH)** - if user asks for "the address", use coin 60
-3. **Cache is enabled by default** - responses are cached for 5 minutes
-4. **Bulk operations are more efficient** - use `/reverse/bulk` when resolving multiple addresses
-5. **Check `hasReverseRecord`** in reverse resolution - not all addresses have ENS names set
-
-## Full API Reference
-
-For complete API documentation with all parameters and responses, visit:
-- **Docs**: https://docs.namespace.ninja/api-reference/resolvio/
-- **Swagger**: https://resolvio.namespace.ninja/api/docs
-- **OpenAPI**: https://resolvio.namespace.ninja/api/openapi.json
+- **Always returns all requested records.** A missing record is `{ exists: false }`, never omitted.
+- **Profile is one RPC call.** Prefer `/profile` over combining separate endpoints.
+- **Bulk profile resolves concurrently.** Max 20 names per request.
+- **Bulk reverse deduplicates** input addresses before resolving.
+- **Cache is per-item, TTL ~5 min.** Bypass with `?noCache=true`.
+- **Chain names and coinTypes are interchangeable.** Use `/ens/v2/chains` to discover them.
