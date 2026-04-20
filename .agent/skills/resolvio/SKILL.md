@@ -1,164 +1,92 @@
 ---
-name: Resolvio
-description: Interact with Resolvio - an ENS resolution API. Resolve ENS names to addresses/texts/contenthash, bulk-resolve profiles, and reverse-resolve addresses to names.
+name: resolvio
+description: Resolves ENS names to addresses, fetches ENS profile and text records, reverse-resolves addresses to ENS names, and batch-resolves ENS names for leaderboards or tables via Resolvio HTTP endpoints. Use when users ask for ENS lookup, reverse lookup, profile data, or bulk ENS resolution.
 ---
 
-# Resolvio API Skill
+# Resolvio ENS Resolution API
 
 **Base URL**: `https://api.resolvio.xyz`  
-**Swagger**: `https://api.resolvio.xyz/api-docs`  
 **OpenAPI JSON**: `https://api.resolvio.xyz/api-docs.json`
 
----
-
-## Forward Resolution
-
-### GET /ens/v2/profile/:name
-
-Full ENS profile in a single RPC call. Default response includes 12 text keys, 8 chains, and contenthash.
-
-```
-GET /ens/v2/profile/vitalik.eth
-```
-
-Optional query params:
-- `texts` — comma-separated text keys, e.g. `avatar,com.twitter`
-- `addresses` — chain names or coinType numbers, e.g. `eth,base,60`
-- `contenthash` — `true` or `false` (default: `true`)
-- `noCache` — `true` bypasses in-memory cache
-
-Response:
-```json
-{
-  "name": "vitalik.eth",
-  "resolver": "0x231b0Ee14048e9dCcD1d247744d114a4EB5E8E63",
-  "texts": [
-    { "key": "avatar", "value": "https://...", "exists": true },
-    { "key": "com.twitter", "exists": false }
-  ],
-  "addresses": [
-    { "coin": 60, "chain": "eth", "value": "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045", "exists": true },
-    { "coin": 0,  "chain": "btc", "exists": false }
-  ],
-  "contenthash": { "value": "ipfs://bafy...", "exists": true }
-}
-```
-
-`exists: false` records are always returned — no key is silently dropped. When `exists` is `false`, `value` is absent.
+No authentication required.
 
 ---
 
-### GET /ens/v2/profile/bulk
+## Route map
 
-Resolve profiles for multiple names in parallel. Accepts the same query params as `/profile/:name`, applied uniformly to all names. Default max: 20 names.
-
-```
-GET /ens/v2/profile/bulk?names=vitalik.eth,artii.eth
-```
-
-Required: `names` (comma-separated, max 20).
-
-Response: array of profile objects (same shape as single profile).
-
-**Tip**: Always prefer bulk over sequential single-profile calls when resolving more than one name.
-
----
-
-### GET /ens/v2/texts/:name
-
-Fetch specific text records only.
-
-```
-GET /ens/v2/texts/vitalik.eth?keys=avatar,description,com.twitter
-```
-
-Required: `keys` (comma-separated).
-
-Common keys: `avatar`, `name`, `description`, `url`, `email`, `location`, `com.twitter`, `com.github`, `com.discord`, `org.telegram`, `com.youtube`
+| Task | Route | Notes |
+| --- | --- | --- |
+| ENS name -> one or more chain addresses | `GET /ens/v2/addresses/:name` | Use `chains` or `coins`, not both |
+| Full profile (texts + addresses + contenthash) | `GET /ens/v2/profile/:name` | Prefer this over multiple separate calls |
+| Multiple profiles | `GET /ens/v2/profile/bulk` | Max 20 names per call |
+| Text records only | `GET /ens/v2/texts/:name` | Pass `keys=` list |
+| Contenthash only | `GET /ens/v2/contenthash/:name` | Returns `{ exists: false }` when unset |
+| Reverse lookup for one address | `GET /ens/v2/reverse/:address` | Returns `hasReverseRecord` |
+| Reverse lookup for many addresses | `GET /ens/v2/reverse/bulk` | Max 20 addresses per call; do not loop single calls |
+| List supported chains + coinTypes | `GET /ens/v2/chains` | Chain names and coinTypes are equivalent |
+| Cache management | `GET ...?noCache=true`, `DELETE /ens/v2/cache/:name` | Use only when fresh data is needed |
 
 ---
 
-### GET /ens/v2/addresses/:name
+## Core rules
 
-Fetch addresses by chain name or coinType. Use `chains` **or** `coins`, not both.
-
-```
-GET /ens/v2/addresses/vitalik.eth?chains=eth,base,btc,sol
-GET /ens/v2/addresses/vitalik.eth?coins=60,2147492101
-```
-
-Common chains: `eth` (60), `btc` (0), `sol` (501), `base` (2147492101), `op` (2147483658), `arb1` (2147525809), `matic` (2147483785)
-
-Use `GET /ens/v2/chains` to get the full list with both name and coinType.
+- All requested records are returned. Missing records appear as `{ "exists": false }` and are not silently dropped.
+- Always check `exists` before reading `value`.
+- Use bulk endpoints for lists. Max 20 items per bulk request; batch larger sets in chunks of 20.
+- For cache, only use `?noCache=true` or cache clear when fresh data is required.
 
 ---
 
-### GET /ens/v2/contenthash/:name
+## Output shapes (quick reference)
 
-```
-GET /ens/v2/contenthash/vitalik.eth
-```
+- `GET /ens/v2/addresses/:name` -> `{ name, addresses: [{ coin, chain, exists, value? }] }`
+- `GET /ens/v2/profile/:name` -> `{ name, resolver?, texts: [{ key, exists, value? }], addresses: [{ coin, chain, exists, value? }], contenthash: { exists, value? } }`
+- `GET /ens/v2/reverse/:address` -> `{ address, hasReverseRecord, name? }`
+- `GET /ens/v2/reverse/bulk` -> `{ addresses: [{ address, hasReverseRecord, name? }] }`
+- `GET /ens/v2/texts/:name` -> `{ name, texts: [{ key, exists, value? }] }`
+- `GET /ens/v2/contenthash/:name` -> `{ exists, value? }`
+- `GET /ens/v2/chains` -> `[{ name, coin }]`
 
-Response: `{ "value": "ipfs://bafy...", "exists": true }` or `{ "exists": false }`.
-
----
-
-### GET /ens/v2/chains
-
-Lists all supported chains with `coin` (coinType integer) and `name` (chain string). Use `name` in `?chains=` params and `coin` in `?coins=` params — they refer to the same chain.
+`value` and `name` are optional and omitted when `exists: false` or `hasReverseRecord: false`.
 
 ---
 
-### DELETE /ens/v2/cache/:name
+## Error handling
 
-Clears cached records for a name. Optional `?type=texts|addresses|all`.
-
----
-
-## Reverse Resolution
-
-### GET /ens/v2/reverse/:address
-
-Resolve a single address to its primary ENS name.
-
-```
-GET /ens/v2/reverse/0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045
-```
-
-Response when found: `{ "address": "0xd8dA...", "hasReverseRecord": true, "name": "vitalik.eth" }`  
-Response when not found: `{ "address": "0x...", "hasReverseRecord": false }`
+- Expect `400` for invalid ENS names, invalid addresses, unsupported chains, or bulk requests over limit.
+- When a lookup does not exist, treat it as a valid empty result (`exists: false` or `hasReverseRecord: false`), not a transport failure.
 
 ---
 
-### GET /ens/v2/reverse/bulk
+## Minimal examples
 
-Resolve multiple addresses in one batched RPC call. Default max: 20 addresses.
+### Name -> ETH address
 
-```
-GET /ens/v2/reverse/bulk?addresses=0xd8dA...,0x225f...
-```
-
-Required: `addresses` (comma-separated, max 20). Duplicates are deduplicated automatically.
-
-Response:
-```json
-{
-  "addresses": [
-    { "address": "0xd8dA...", "hasReverseRecord": true,  "name": "vitalik.eth" },
-    { "address": "0x225f...", "hasReverseRecord": false }
-  ]
-}
+```bash
+curl "https://api.resolvio.xyz/ens/v2/addresses/vitalik.eth?chains=eth"
 ```
 
-**Tip**: Always use bulk when resolving more than one address — it batches the RPC call.
+### Profile with selected fields
+
+```bash
+curl "https://api.resolvio.xyz/ens/v2/profile/vitalik.eth?texts=avatar,description,com.twitter&addresses=eth,base&contenthash=false"
+```
+
+### Bulk reverse for leaderboard rows
+
+```bash
+curl "https://api.resolvio.xyz/ens/v2/reverse/bulk?addresses=0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045,0x225f137127d9067788314bc7fcc1f36746a3c3B5"
+```
+
+### Fresh read after update
+
+```bash
+curl "https://api.resolvio.xyz/ens/v2/profile/vitalik.eth?noCache=true"
+```
 
 ---
 
-## Key behaviours
+## References
 
-- **Always returns all requested records.** A missing record is `{ exists: false }`, never omitted.
-- **Profile is one RPC call.** Prefer `/profile` over combining separate endpoints.
-- **Bulk profile resolves concurrently.** Max 20 names per request.
-- **Bulk reverse deduplicates** input addresses before resolving.
-- **Cache is per-item, TTL ~5 min.** Bypass with `?noCache=true`.
-- **Chain names and coinTypes are interchangeable.** Use `/ens/v2/chains` to discover them.
+- Full API reference (params, response shapes, errors): [references/api.md](references/api.md)
+- Concise usage examples by workflow: [references/examples.md](references/examples.md)
