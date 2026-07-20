@@ -6,7 +6,7 @@ on:
 
 jobs:
   build-and-push:
-    uses: thenamespace/.github-private/.github/workflows/gcp-oidc-docker-build-push-custom-app.yaml@main
+    uses: thenamespace/.github/.github/workflows/gcp-oidc-docker-build-push-custom-app.yaml@main
     permissions:
       contents: read
       id-token: write
