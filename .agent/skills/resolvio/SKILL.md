@@ -22,6 +22,7 @@ No authentication required.
 | Text records only | `GET /ens/v2/texts/:name` | Pass `keys=` list |
 | Contenthash only | `GET /ens/v2/contenthash/:name` | Returns `{ exists: false }` when unset |
 | Reverse lookup for one address | `GET /ens/v2/reverse/:address` | Returns `hasReverseRecord` |
+| Verified profile for one address | `GET /ens/v2/reverse/:address/profile` | Stable nullable fields plus the full profile; ideal for leaderboard rows |
 | Reverse lookup for many addresses | `GET /ens/v2/reverse/bulk` | Max 20 addresses per call; do not loop single calls |
 | List supported chains + coinTypes | `GET /ens/v2/chains` | Chain names and coinTypes are equivalent |
 | Cache management | `GET ...?noCache=true`, `DELETE /ens/v2/cache/:name` | Use only when fresh data is needed |
@@ -34,6 +35,8 @@ No authentication required.
 - Always check `exists` before reading `value`.
 - Use bulk endpoints for lists. Max 20 items per bulk request; batch larger sets in chunks of 20.
 - For cache, only use `?noCache=true` or cache clear when fresh data is required.
+- Reverse-profile results are forward-verified by ENSJS. For a valid address with no verified reverse record, expect HTTP 200 with `name`, convenience fields, and `profile` set to `null`.
+- `avatar`, `displayName`, and `description` are derived only from the requested profile text records. Custom `texts=` selections do not trigger hidden lookups.
 
 ---
 
@@ -42,12 +45,13 @@ No authentication required.
 - `GET /ens/v2/addresses/:name` -> `{ name, addresses: [{ coin, chain, exists, value? }] }`
 - `GET /ens/v2/profile/:name` -> `{ name, resolver?, texts: [{ key, exists, value? }], addresses: [{ coin, chain, exists, value? }], contenthash: { exists, value? } }`
 - `GET /ens/v2/reverse/:address` -> `{ address, hasReverseRecord, name? }`
+- `GET /ens/v2/reverse/:address/profile` -> `{ address, hasReverseRecord, name, avatar, displayName, description, profile }`; all fields are present and the last five are nullable
 - `GET /ens/v2/reverse/bulk` -> `{ addresses: [{ address, hasReverseRecord, name? }] }`
 - `GET /ens/v2/texts/:name` -> `{ name, texts: [{ key, exists, value? }] }`
 - `GET /ens/v2/contenthash/:name` -> `{ exists, value? }`
 - `GET /ens/v2/chains` -> `[{ name, coin }]`
 
-`value` and `name` are optional and omitted when `exists: false` or `hasReverseRecord: false`.
+`value` and the legacy reverse endpoint's `name` are optional and omitted when `exists: false` or `hasReverseRecord: false`. The reverse-profile endpoint instead uses explicit `null` values for a stable consumer contract.
 
 ---
 
@@ -76,6 +80,12 @@ curl "https://api.resolvio.xyz/ens/v2/profile/vitalik.eth?texts=avatar,descripti
 
 ```bash
 curl "https://api.resolvio.xyz/ens/v2/reverse/bulk?addresses=0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045,0x225f137127d9067788314bc7fcc1f36746a3c3B5"
+```
+
+### Verified profile for a leaderboard row
+
+```bash
+curl "https://api.resolvio.xyz/ens/v2/reverse/0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045/profile?texts=avatar,name,description"
 ```
 
 ### Fresh read after update

@@ -4,11 +4,8 @@ import { Test } from '@nestjs/testing';
 import { App } from 'supertest/types';
 import { AppPropertiesModule } from '../src/app-properties/app-properties.module';
 import { ENSModule } from '../src/ens/ens.module';
-import {
-  AddressResult,
-  ContenthashResult,
-  TextResult,
-} from '../src/ens/dto';
+import { LoggerModule } from '../src/logger/logger.module';
+import { AddressResult, ContenthashResult, TextResult } from '../src/ens/dto';
 
 // ---------------------------------------------------------------------------
 // TestEnsProfile
@@ -31,16 +28,17 @@ function buildProfile(
 ): TestEnsProfile {
   return {
     ...fields,
-    getText(key: string) {
-      return this.texts.find((t: TextResult) => t.key === key);
-    },
-    getAddress(chainOrCoin: string | number) {
+    getText: (key: string) =>
+      fields.texts.find((text: TextResult) => text.key === key),
+    getAddress: (chainOrCoin: string | number) => {
       if (typeof chainOrCoin === 'number') {
-        return this.addresses.find(
-          (a: AddressResult) => a.coin === chainOrCoin,
+        return fields.addresses.find(
+          (address: AddressResult) => address.coin === chainOrCoin,
         );
       }
-      return this.addresses.find((a: AddressResult) => a.chain === chainOrCoin);
+      return fields.addresses.find(
+        (address: AddressResult) => address.chain === chainOrCoin,
+      );
     },
   };
 }
@@ -64,10 +62,14 @@ export const onchainProfile: TestEnsProfile = buildProfile({
   name: 'artii.eth',
   resolver: '0x231b0Ee14048e9dCcD1d247744d114a4EB5E8E63' as `0x${string}`,
   texts: [
-    { key: 'avatar',      value: 'https://avatars.namespace.ninja/artii.eth_1750354393.png', exists: true },
-    { key: 'email',       value: 'arthy@namespace.ninja', exists: true },
+    {
+      key: 'avatar',
+      value: 'https://avatars.namespace.ninja/artii.eth_1750354393.png',
+      exists: true,
+    },
+    { key: 'email', value: 'arthy@namespace.ninja', exists: true },
     { key: 'com.twitter', exists: false },
-    { key: 'unknown',     exists: false },
+    { key: 'unknown', exists: false },
   ],
   addresses: [
     {
@@ -120,17 +122,17 @@ export const onchainProfile: TestEnsProfile = buildProfile({
 export const offchainProfile: TestEnsProfile = buildProfile({
   name: 'arti.offchainsub.eth',
   texts: [
-    { key: 'avatar',      exists: false },
-    { key: 'header',      exists: false },
-    { key: 'name',        value: 'Arti', exists: true },
+    { key: 'avatar', exists: false },
+    { key: 'header', exists: false },
+    { key: 'name', value: 'Arti', exists: true },
     { key: 'description', value: 'I do coding and stuff', exists: true },
-    { key: 'url',         value: 'https://app.namespace.ninja', exists: true },
-    { key: 'location',    exists: false },
-    { key: 'email',       exists: false }, // stored as 'mail' in the offchain resolver
+    { key: 'url', value: 'https://app.namespace.ninja', exists: true },
+    { key: 'location', exists: false },
+    { key: 'email', exists: false }, // stored as 'mail' in the offchain resolver
     { key: 'com.twitter', exists: false },
     { key: 'com.discord', exists: false },
-    { key: 'com.github',  exists: false },
-    { key: 'org.telegram',exists: false },
+    { key: 'com.github', exists: false },
+    { key: 'org.telegram', exists: false },
     { key: 'com.youtube', exists: false },
   ],
   addresses: [
@@ -156,6 +158,7 @@ export async function createTestApp(): Promise<INestApplication<App>> {
     imports: [
       ConfigModule.forRoot({ isGlobal: true }),
       AppPropertiesModule,
+      LoggerModule,
       ENSModule,
     ],
   }).compile();

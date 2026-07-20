@@ -71,6 +71,7 @@ The API will be available at `http://localhost:3000`.
 | Method | Path | Description |
 |---|---|---|
 | `GET` | `/ens/v2/reverse/:address` | Single address → ENS name |
+| `GET` | `/ens/v2/reverse/:address/profile` | Verified reverse record → full ENS profile with convenience fields |
 | `GET` | `/ens/v2/reverse/bulk` | Multiple addresses → ENS names (batched RPC call) |
 
 ---
@@ -102,7 +103,22 @@ curl "https://api.resolvio.xyz/ens/v2/reverse/0xd8dA6BF26964aF9D7eEd9e03E53415D3
 
 # Bulk reverse resolve (up to 20 addresses)
 curl "https://api.resolvio.xyz/ens/v2/reverse/bulk?addresses=0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045,0x225f137127d9067788314bc7fcc1f36746a3c3B5"
+
+# Reverse resolve an address to its verified ENS profile
+curl "https://api.resolvio.xyz/ens/v2/reverse/0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045/profile"
+
+# Custom profile selection (texts/addresses/contenthash) with cache bypass
+curl "https://api.resolvio.xyz/ens/v2/reverse/0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045/profile?texts=avatar,com.twitter&addresses=eth,base&contenthash=false&noCache=true"
 ```
+
+### Reverse profile response
+
+`GET /ens/v2/reverse/:address/profile` always returns HTTP 200 for valid addresses:
+
+- `hasReverseRecord: false` — the address has no verified reverse record. `name`, `avatar`, `displayName`, `description`, and `profile` are `null`. The forward resolver is **not** called.
+- `hasReverseRecord: true` — the address resolves to a verified ENS name. `name` is the primary name, `avatar`/`displayName`/`description` are extracted from the resolved text records (or `null` when those records are missing or not requested), and `profile` contains the full ENS profile payload.
+
+The reverse lookup uses ENSJS `getName` with `allowMismatch` disabled by default, so only forward-verified names are returned. Upstream RPC/resolver errors are propagated unchanged.
 
 All endpoints accept `?noCache=true` to bypass the in-memory cache.
 
