@@ -1,0 +1,47 @@
+---
+name: Update Staging Image Version
+
+on:
+  workflow_call:
+    secrets:
+      REPOSITORY_DISPATCH_PAT:
+        required: true
+        description: "Triggers a PR creation in the infra repository"
+    inputs:
+      image_tag_suffix:
+        required: false
+        type: string
+        default: "none"
+      environment:
+        required: false
+        type: string
+        description: "The environment for which the image tag is being updated [staging,prod]"
+        default: "staging"
+
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout the reository
+        uses: actions/checkout@v4
+      - name: Get short commit SHA
+        run: |
+          calculatedSha=$(git rev-parse --short ${{ github.sha }})
+          
+          if [[ "${{ inputs.image_tag_suffix }}" != "none" && -n "${{ inputs.image_tag_suffix  }}" ]]; then
+            calculatedSha="${calculatedSha}-${{ inputs.image_tag_suffix }}"
+          fi
+
+          echo "IMAGE_TAG=$calculatedSha" >> $GITHUB_ENV
+      - name: Repository Dispatch
+        uses: peter-evans/repository-dispatch@v3
+        with:
+          token: ${{ secrets.REPOSITORY_DISPATCH_PAT }}
+          repository: thenamespace/infra
+          event-type: image-tag-update
+          client-payload: '{
+            "repository": "${{ github.event.repository.name }}",
+            "image_tag": "${{ env.IMAGE_TAG }}",
+            "environment": "${{ inputs.environment }}"
+          }'
