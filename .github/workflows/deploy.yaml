@@ -1,0 +1,23 @@
+---
+name: Deploy Production
+
+on:
+    workflow_dispatch:
+
+jobs:
+    build-and-push:
+        uses: thenamespace/.github/.github/workflows/gcp-oidc-docker-build-push.yaml@main
+        permissions:
+            contents: read
+            id-token: write
+        with:
+            project_id: prod-9427
+            region: europe-west3
+        secrets:
+            workload_identity_provider: ${{ secrets.WORKLOAD_IDENTITY_PROVIDER }}
+    update-prod:
+        needs: build-and-push
+        uses: ./.github/workflows/dispatch.yml
+        secrets: inherit
+        with:
+            environment: prod
