@@ -17,7 +17,7 @@ jobs:
             workload_identity_provider: ${{ secrets.WORKLOAD_IDENTITY_PROVIDER }}
     update-prod:
         needs: build-and-push
-        uses: ./.github/workflows/dispatch.yml
+        uses: ./.github/workflows/dispatch.yaml
         secrets: inherit
         with:
             environment: prod
