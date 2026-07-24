@@ -35,8 +35,8 @@ No authentication required.
 - Always check `exists` before reading `value`.
 - Use bulk endpoints for lists. Max 20 items per bulk request; batch larger sets in chunks of 20.
 - For cache, only use `?noCache=true` or cache clear when fresh data is required.
-- Reverse-profile results are forward-verified by ENSJS. For a valid address with no verified reverse record, expect HTTP 200 with `name`, convenience fields, and `profile` set to `null`.
-- `avatar`, `displayName`, and `description` are derived only from the requested profile text records. Custom `texts=` selections do not trigger hidden lookups.
+- Reverse-profile results are forward-verified by ENSJS. For a valid address with no verified reverse record — including a reverse record that fails forward verification — expect HTTP 200 with `name`, convenience fields, and `profile` set to `null`.
+- `avatar`, `displayName`, and `description` are derived only from the requested profile text records. `displayName` maps to the ENS `name` text record. Custom `texts=` selections do not trigger hidden lookups.
 
 ---
 

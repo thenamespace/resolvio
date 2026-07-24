@@ -241,6 +241,64 @@ Resolve a single Ethereum address to its primary ENS name.
 
 ---
 
+### GET /ens/v2/reverse/:address/profile
+
+Reverse-resolve an address to its verified ENS primary name, then return the full profile plus convenience fields (`avatar`, `displayName`, `description`). Always returns HTTP 200 for valid addresses.
+
+**Path param**: `address` — Ethereum address
+
+**Query params** (same as `/profile/:name`):
+
+| Param         | Type    | Description                                                         |
+| ------------- | ------- | ------------------------------------------------------------------- |
+| `texts`       | string  | Comma-separated text record keys. Omit for defaults.                |
+| `addresses`   | string  | Comma-separated chain names or coinType numbers. Omit for defaults. |
+| `contenthash` | boolean | Include contenthash (default: `true`)                               |
+| `noCache`     | boolean | Bypass cache for both reverse and forward lookups                   |
+
+**Response (verified reverse record exists)**:
+
+```json
+{
+  "address": "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045",
+  "hasReverseRecord": true,
+  "name": "vitalik.eth",
+  "avatar": "https://...",
+  "displayName": "Vitalik",
+  "description": "Ethereum founder",
+  "profile": {
+    "name": "vitalik.eth",
+    "resolver": "0x231b0Ee14048e9dCcD1d247744d114a4EB5E8E63",
+    "texts": [
+      { "key": "avatar", "value": "https://...", "exists": true },
+      { "key": "name", "value": "Vitalik", "exists": true }
+    ],
+    "addresses": [
+      { "coin": 60, "chain": "eth", "value": "0xd8dA...", "exists": true }
+    ],
+    "contenthash": { "exists": false }
+  }
+}
+```
+
+**Response (no verified reverse record)**:
+
+```json
+{
+  "address": "0x225f137127d9067788314bc7fcc1f36746a3c3B5",
+  "hasReverseRecord": false,
+  "name": null,
+  "avatar": null,
+  "displayName": null,
+  "description": null,
+  "profile": null
+}
+```
+
+When `hasReverseRecord` is `false`, the forward resolver is not called and all profile fields are `null`. This includes reverse records that fail forward verification. `displayName` is populated from the ENS `name` text record; include `name` in a custom `texts=` selection when you need it.
+
+---
+
 ### GET /ens/v2/reverse/bulk
 
 Resolve multiple Ethereum addresses to their primary ENS names in a single batched RPC call.
