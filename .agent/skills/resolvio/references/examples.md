@@ -44,6 +44,19 @@ Use `name` only when `hasReverseRecord` is `true`; otherwise show a shortened ad
 
 ---
 
+### Reverse resolve to verified profile (leaderboard/identity card)
+
+```bash
+curl "https://api.resolvio.xyz/ens/v2/reverse/0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045/profile"
+
+# With custom profile selection and cache bypass
+curl "https://api.resolvio.xyz/ens/v2/reverse/0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045/profile?texts=avatar,name,com.twitter&addresses=eth,base&contenthash=false&noCache=true"
+```
+
+When `hasReverseRecord` is `true`, use `name`, `avatar`, `displayName`, and `description` directly. `displayName` comes from the ENS `name` text record. When `false`, all profile fields are `null` — show a shortened address fallback.
+
+---
+
 ### Reverse resolve multiple addresses (leaderboards/tables)
 
 ```bash
