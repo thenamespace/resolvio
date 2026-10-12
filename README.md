@@ -28,7 +28,7 @@
 ## Quick start
 
 ```bash
-cp .env.example .env   # fill in RPC_URL
+cp .env.example .env   # fill in MAIN_RPC_URL
 npm install
 npm run start:dev
 ```
@@ -41,7 +41,9 @@ The API will be available at `http://localhost:3000`.
 
 | Variable | Description | Default |
 |---|---|---|
-| `RPC_URL` | Ethereum mainnet RPC endpoint | — (required) |
+| `MAIN_RPC_URL` | Primary Ethereum RPC endpoint. `RPC_URL` is accepted as a legacy alias. | — (required) |
+| `FALLBACK_RPC_URLS` | Comma-separated RPC endpoints tried in order when the main RPC fails | — |
+| `MIN_CACHE_REFRESH_INTERVAL` | Minimum seconds between refreshes of the same entry. `0` disables it. `noCache` requests are served from cache if the entry is younger than this, and repeated cache clears within this window are ignored. | `5` |
 | `FORWARD_RESOLVE_CACHE_EXPIRY` | Forward cache TTL in seconds. `0` disables caching. | `300` |
 | `REVERSE_RESOLVE_CACHE_EXPIRY` | Reverse cache TTL in seconds. `0` disables caching. | `1800` |
 | `MAX_BULK_REVERSE_REQUEST` | Max addresses per bulk reverse request | `20` |
