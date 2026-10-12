@@ -35,6 +35,7 @@ export class InMemoryReverseResolverCache implements IReverseResolverCache {
     if (this.disabled) return;
     this.cache.set(address.toLowerCase(), {
       name,
+      cachedAt: Date.now(),
       expiresAt: Date.now() + this.expiry,
     });
   }

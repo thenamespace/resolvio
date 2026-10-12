@@ -3,7 +3,10 @@ import { AppProperties } from 'src/app-properties/app-properties';
 import { EthClients } from 'src/web3/eth.clients';
 import { chainNameForCoin, coinTypeForChain } from './supported-chains';
 import { FORWARD_RESOLVER_CACHE } from './caches/forward-resolver.cache';
-import type { IForwardResolverCache } from './caches/forward-resolver.cache';
+import type {
+  CacheEntry,
+  IForwardResolverCache,
+} from './caches/forward-resolver.cache';
 import { EnsTextRecord } from './ens.types';
 import {
   AddressResult,
@@ -29,6 +32,9 @@ const ETH_COIN_TYPE = 60;
 export class EnsForwardResolver {
   private readonly logger: ContextLogger;
   private readonly maxBulkProfileRequest: number;
+  private readonly minCacheRefreshInterval: number;
+  // Last clear time per `${name}:${type}`, used to throttle cache clears
+  private readonly lastClearedAt = new Map<string, number>();
 
   constructor(
     private readonly client: EthClients,
@@ -39,6 +45,7 @@ export class EnsForwardResolver {
   ) {
     this.logger = loggerService.forContext(EnsForwardResolver.name);
     this.maxBulkProfileRequest = appProperties.maxBulkProfileRequest;
+    this.minCacheRefreshInterval = appProperties.minCacheRefreshInterval;
   }
 
   public async resolveTexts(
@@ -53,9 +60,9 @@ export class EnsForwardResolver {
       throw new BadRequestException('At least on text key required');
     }
 
-    if (!noCache && this.cache.isEnabled()) {
+    if (this.cache.isEnabled()) {
       for (const key of keys) {
-        const cached = this.cache.getText(name, key);
+        const cached = this.usable(this.cache.getText(name, key), noCache);
         if (cached !== null) {
           texts.push(
             cached.isEmpty
@@ -119,9 +126,9 @@ export class EnsForwardResolver {
     const addresses: AddressResult[] = [];
     const missedCoins: number[] = [];
 
-    if (!noCache && this.cache.isEnabled()) {
+    if (this.cache.isEnabled()) {
       for (const coin of requestedCoins) {
-        const cached = this.cache.getAddress(name, coin);
+        const cached = this.usable(this.cache.getAddress(name, coin), noCache);
         if (cached !== null) {
           const chain = chainNameForCoin(coin);
           addresses.push(
@@ -167,8 +174,8 @@ export class EnsForwardResolver {
     name: string,
     noCache = false,
   ): Promise<ContenthashResult> {
-    if (!noCache && this.cache.isEnabled()) {
-      const cached = this.cache.getContenthash(name);
+    if (this.cache.isEnabled()) {
+      const cached = this.usable(this.cache.getContenthash(name), noCache);
       if (cached !== null) {
         return cached.isEmpty
           ? { exists: false }
@@ -228,11 +235,11 @@ export class EnsForwardResolver {
     let fetchContenthash = includeContenthash;
     let resolverAddress: `0x${string}` | undefined;
 
-    const cacheEnabled = !noCache && this.cache.isEnabled();
+    const cacheEnabled = this.cache.isEnabled();
 
     if (cacheEnabled) {
       for (const key of textKeys) {
-        const cached = this.cache.getText(name, key);
+        const cached = this.usable(this.cache.getText(name, key), noCache);
         if (cached !== null) {
           texts.push(
             cached.isEmpty
@@ -245,7 +252,7 @@ export class EnsForwardResolver {
       }
 
       for (const coin of requestedCoins) {
-        const cached = this.cache.getAddress(name, coin);
+        const cached = this.usable(this.cache.getAddress(name, coin), noCache);
         if (cached !== null) {
           const chain = chainNameForCoin(coin);
           addresses.push(
@@ -259,7 +266,7 @@ export class EnsForwardResolver {
       }
 
       if (includeContenthash) {
-        const cached = this.cache.getContenthash(name);
+        const cached = this.usable(this.cache.getContenthash(name), noCache);
         if (cached !== null) {
           contenthash = cached.isEmpty
             ? { exists: false }
@@ -370,10 +377,50 @@ export class EnsForwardResolver {
     name: string,
     type: ForwardCacheType = ForwardCacheType.ALL,
   ): void {
+    const now = Date.now();
+    const clearKey = `${name}:${type}`;
+    const lastCleared = this.lastClearedAt.get(clearKey);
+    if (
+      lastCleared !== undefined &&
+      now - lastCleared < this.minCacheRefreshInterval
+    ) {
+      this.logger.debug(`clearCache ${clearKey} skipped, cleared recently`);
+      return;
+    }
+    this.pruneLastClearedAt(now);
+    this.lastClearedAt.set(clearKey, now);
+
     if (type === ForwardCacheType.TEXTS) return this.cache.deleteText(name);
     if (type === ForwardCacheType.ADDRESSES)
       return this.cache.deleteAddress(name);
     this.cache.deleteAll(name);
+  }
+
+  /**
+   * With noCache, entries cached within minCacheRefreshInterval are still
+   * served so repeated noCache requests don't all hit the RPC.
+   */
+  private usable<T>(
+    entry: CacheEntry<T> | null,
+    noCache: boolean,
+  ): CacheEntry<T> | null {
+    if (entry === null) return null;
+    if (
+      noCache &&
+      Date.now() - entry.cachedAt >= this.minCacheRefreshInterval
+    ) {
+      return null;
+    }
+    return entry;
+  }
+
+  private pruneLastClearedAt(now: number): void {
+    if (this.lastClearedAt.size < 1000) return;
+    for (const [key, clearedAt] of this.lastClearedAt) {
+      if (now - clearedAt >= this.minCacheRefreshInterval) {
+        this.lastClearedAt.delete(key);
+      }
+    }
   }
 
   private ens() {

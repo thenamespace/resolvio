@@ -10,6 +10,7 @@ import { ContextLogger, LoggerService } from 'src/logger/logger.service';
 @Injectable()
 export class EnsReverseResolverV2 {
   private readonly maxBulk: number;
+  private readonly minCacheRefreshInterval: number;
   private readonly logger: ContextLogger;
 
   constructor(
@@ -20,6 +21,7 @@ export class EnsReverseResolverV2 {
     loggerService: LoggerService,
   ) {
     this.maxBulk = appProperties.maxBulkReverseRequest;
+    this.minCacheRefreshInterval = appProperties.minCacheRefreshInterval;
     this.logger = loggerService.forContext(EnsReverseResolverV2.name);
   }
 
@@ -29,9 +31,15 @@ export class EnsReverseResolverV2 {
   ): Promise<ReverseResolveResult> {
     const key = address.toLowerCase();
 
-    if (!noCache && this.cache.isEnabled()) {
+    if (this.cache.isEnabled()) {
       const cached = this.cache.get(key);
-      if (cached !== null) {
+      // With noCache, entries cached within minCacheRefreshInterval are still
+      // served so repeated noCache requests don't all hit the RPC.
+      const usable =
+        cached !== null &&
+        (!noCache ||
+          Date.now() - cached.cachedAt < this.minCacheRefreshInterval);
+      if (usable) {
         return {
           address,
           hasReverseRecord: cached.name !== null,

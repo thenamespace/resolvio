@@ -5,6 +5,7 @@ export const FORWARD_RESOLVER_CACHE = Symbol('FORWARD_RESOLVER_CACHE');
 export type CacheEntry<T> = {
   data: T | null;
   isEmpty: boolean;
+  cachedAt: number;
   expiresAt: number;
 };
 

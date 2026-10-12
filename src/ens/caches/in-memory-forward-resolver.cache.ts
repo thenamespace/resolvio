@@ -48,6 +48,7 @@ export class InMemoryForwardResolverCache implements IForwardResolverCache {
     this.textCache.set(cacheKey, {
       data,
       isEmpty: data === null,
+      cachedAt: Date.now(),
       expiresAt: Date.now() + this.expiry,
     });
     this.trackKey(name, cacheKey);
@@ -77,6 +78,7 @@ export class InMemoryForwardResolverCache implements IForwardResolverCache {
     this.addressCache.set(cacheKey, {
       data,
       isEmpty: data === null,
+      cachedAt: Date.now(),
       expiresAt: Date.now() + this.expiry,
     });
     this.trackKey(name, cacheKey);
@@ -106,6 +108,7 @@ export class InMemoryForwardResolverCache implements IForwardResolverCache {
     this.contenthashCache.set(cacheKey, {
       data: value,
       isEmpty: value === null,
+      cachedAt: Date.now(),
       expiresAt: Date.now() + this.expiry,
     });
     this.trackKey(name, cacheKey);

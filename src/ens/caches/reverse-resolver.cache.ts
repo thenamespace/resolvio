@@ -3,6 +3,7 @@ export const REVERSE_RESOLVER_CACHE = Symbol('REVERSE_RESOLVER_CACHE');
 export type ReverseCacheEntry = {
   /** Resolved name, or null if address has no reverse record. */
   name: string | null;
+  cachedAt: number;
   expiresAt: number;
 };
 
