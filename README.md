@@ -48,6 +48,7 @@ The API will be available at `http://localhost:3000`.
 | `REVERSE_RESOLVE_CACHE_EXPIRY` | Reverse cache TTL in seconds. `0` disables caching. | `1800` |
 | `MAX_BULK_REVERSE_REQUEST` | Max addresses per bulk reverse request | `20` |
 | `MAX_BULK_PROFILE_REQUEST` | Max names per bulk profile request | `20` |
+| `RATE_LIMIT_PER_MINUTE` | Max requests per client IP per minute. Exceeding it returns `429`. `0` disables it. | `100` |
 | `ENABLE_DOCS` | Expose Swagger UI at `/api-docs` and OpenAPI JSON at `/api-docs.json` | `false` |
 | `DEBUG_MODE` | Log request and response details at debug level | `false` |
 | `IS_TESTNET` | Use ENS testnet registry | `false` |
