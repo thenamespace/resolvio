@@ -110,8 +110,10 @@ export function coinTypeForChain(name: string): number | null {
 }
 
 // Covers named coins and any EVM coin type (0x80000000 | chainId), which
-// SUPPORTED_CHAINS does not list individually.
+// SUPPORTED_CHAINS does not list individually. The integer check matters:
+// getCoderByCoinType accepts fractional EVM coin types like 2147483648.5.
 export function isSupportedCoinType(coin: number): boolean {
+  if (!Number.isSafeInteger(coin) || coin < 0) return false;
   try {
     getCoderByCoinType(coin);
     return true;

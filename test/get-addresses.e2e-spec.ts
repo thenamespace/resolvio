@@ -144,6 +144,14 @@ describe('GET /ens/v2/addresses/:name', () => {
     });
   });
 
+  it('returns 400 for fractional or negative coin types', async () => {
+    for (const coin of ['2147483648.5', '-60']) {
+      await request(app.getHttpServer())
+        .get(`/ens/v2/addresses/${onchainProfile.name}?coins=${coin}`)
+        .expect(400);
+    }
+  });
+
   it('returns 400 when name is too short', async () => {
     await request(app.getHttpServer()).get('/ens/v2/addresses/a.b').expect(400);
   });

@@ -142,6 +142,12 @@ describe('GET /ens/v2/profile/:name', () => {
       .expect(400);
   });
 
+  it('returns 400 for a fractional EVM coin type in addresses param', async () => {
+    await request(app.getHttpServer())
+      .get(`/ens/v2/profile/${onchainProfile.name}?addresses=2147483648.5`)
+      .expect(400);
+  });
+
   it('returns 400 when name is too short', async () => {
     await request(app.getHttpServer()).get('/ens/v2/profile/a.b').expect(400);
   });
