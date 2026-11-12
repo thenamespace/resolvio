@@ -1,6 +1,7 @@
 import {
   coinNameToTypeMap,
   getCoderByCoinName,
+  getCoderByCoinType,
 } from '@ensdomains/address-encoder';
 
 export type SupportedChain = {
@@ -41,6 +42,7 @@ export enum Chain {
   xtz = 'xtz',
   fil = 'fil',
   icp = 'icp',
+  vara = 'vara',
 }
 
 const CHAIN_LABELS: Record<string, string> = {
@@ -74,6 +76,7 @@ const CHAIN_LABELS: Record<string, string> = {
   [Chain.xtz]: 'Tezos',
   [Chain.fil]: 'Filecoin',
   [Chain.icp]: 'Internet Computer',
+  [Chain.vara]: 'Vara Network',
 };
 
 function buildSupportedChains(): SupportedChain[] {
@@ -103,6 +106,17 @@ export function coinTypeForChain(name: string): number | null {
     return getCoderByCoinName(name).coinType;
   } catch {
     return null;
+  }
+}
+
+// Covers named coins and any EVM coin type (0x80000000 | chainId), which
+// SUPPORTED_CHAINS does not list individually.
+export function isSupportedCoinType(coin: number): boolean {
+  try {
+    getCoderByCoinType(coin);
+    return true;
+  } catch {
+    return false;
   }
 }
 

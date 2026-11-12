@@ -136,6 +136,12 @@ describe('GET /ens/v2/profile/:name', () => {
       .expect(400);
   });
 
+  it('returns 400 for unsupported coin type in addresses param', async () => {
+    await request(app.getHttpServer())
+      .get(`/ens/v2/profile/${onchainProfile.name}?addresses=999999`)
+      .expect(400);
+  });
+
   it('returns 400 when name is too short', async () => {
     await request(app.getHttpServer()).get('/ens/v2/profile/a.b').expect(400);
   });
