@@ -7,6 +7,7 @@ const DEFAULT_REVERSE_CACHE_EXPIRY_S = 30 * 60; // 30 minutes
 const DEFAULT_MAX_BULK_REVERSE_REQUEST = 20;
 const DEFAULT_MAX_BULK_PROFILE_REQUEST = 20;
 const DEFAULT_MIN_CACHE_REFRESH_INTERVAL_S = 5;
+const DEFAULT_RATE_LIMIT_PER_MINUTE = 100;
 
 const toMillis = (seconds: number) => seconds * 1000;
 
@@ -21,6 +22,8 @@ export class AppProperties {
   readonly maxBulkProfileRequest: number;
   // Minimum time between cache refreshes (noCache / cache clear) for the same entry
   readonly minCacheRefreshInterval: number;
+  // Max requests per client IP per minute, 0 disables rate limiting
+  readonly rateLimitPerMinute: number;
   readonly enableDocs: boolean;
 
   constructor(config: ConfigService) {
@@ -49,7 +52,9 @@ export class AppProperties {
 
     const bulkProfileRaw = config.get<string>('MAX_BULK_PROFILE_REQUEST') ?? '';
     this.maxBulkProfileRequest =
-      bulkProfileRaw === '' ? DEFAULT_MAX_BULK_PROFILE_REQUEST : parseInt(bulkProfileRaw);
+      bulkProfileRaw === ''
+        ? DEFAULT_MAX_BULK_PROFILE_REQUEST
+        : parseInt(bulkProfileRaw);
 
     const refreshRaw = config.get<string>('MIN_CACHE_REFRESH_INTERVAL') ?? '';
     const refreshParsed = parseInt(refreshRaw);
@@ -58,6 +63,14 @@ export class AppProperties {
       ? DEFAULT_MIN_CACHE_REFRESH_INTERVAL_S
       : Math.max(0, refreshParsed);
     this.minCacheRefreshInterval = toMillis(refreshSeconds);
+
+    const rateLimitParsed = parseInt(
+      config.get<string>('RATE_LIMIT_PER_MINUTE') ?? '',
+    );
+    // 0 or negative disables rate limiting, invalid values fall back to default
+    this.rateLimitPerMinute = isNaN(rateLimitParsed)
+      ? DEFAULT_RATE_LIMIT_PER_MINUTE
+      : Math.max(0, rateLimitParsed);
 
     this.enableDocs = config.get<string>('ENABLE_DOCS') === 'true';
   }
