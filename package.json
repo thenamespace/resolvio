@@ -14,6 +14,7 @@
     "test:e2e": "jest --config ./test/jest-e2e.json"
   },
   "dependencies": {
+    "@ensdomains/address-encoder": "^3.0.0",
     "@ensdomains/ensjs": "^4.2.2",
     "@nestjs/common": "^11.0.1",
     "@nestjs/config": "^4.0.2",
@@ -68,15 +69,19 @@
       "^.+\\.(t|j)s$": "ts-jest"
     },
     "moduleNameMapper": {
-      "^src/(.*)$": "<rootDir>/../src/$1"
+      "^src/(.*)$": "<rootDir>/../src/$1",
+      "^cborg$": "<rootDir>/../node_modules/cborg/cborg.js"
     },
     "transformIgnorePatterns": [
-      "/node_modules/(?!(@ensdomains|viem|abitype|isows|webauthn-p256|graphql-request)/)"
+      "/node_modules/(?!(@ensdomains|viem|abitype|isows|webauthn-p256|graphql-request|cborg)/)"
     ],
     "collectCoverageFrom": [
       "**/*.(t|j)s"
     ],
     "coverageDirectory": "../coverage",
     "testEnvironment": "node"
+  },
+  "overrides": {
+    "@ensdomains/address-encoder": "$@ensdomains/address-encoder"
   }
 }
