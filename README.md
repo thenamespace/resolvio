@@ -46,6 +46,8 @@ The API will be available at `http://localhost:3000`.
 | `MIN_CACHE_REFRESH_INTERVAL` | Minimum seconds between refreshes of the same entry. `0` disables it. `noCache` requests are served from cache if the entry is younger than this, and repeated cache clears within this window are ignored. | `5` |
 | `FORWARD_RESOLVE_CACHE_EXPIRY` | Forward cache TTL in seconds. `0` disables caching. | `300` |
 | `REVERSE_RESOLVE_CACHE_EXPIRY` | Reverse cache TTL in seconds. `0` disables caching. | `1800` |
+| `FORWARD_RESOLVE_CACHE_MAX_ENTRIES` | Max forward cache entries (one per text, address or contenthash record). Least recently used entries are evicted when full. `0` disables caching. | `100000` |
+| `REVERSE_RESOLVE_CACHE_MAX_ENTRIES` | Max reverse cache entries (one per address). Least recently used entries are evicted when full. `0` disables caching. | `50000` |
 | `MAX_BULK_REVERSE_REQUEST` | Max addresses per bulk reverse request | `20` |
 | `MAX_BULK_PROFILE_REQUEST` | Max names per bulk profile request | `20` |
 | `RATE_LIMIT_PER_MINUTE` | Max requests per client IP per minute. Exceeding it returns `429`. `0` disables it. | `100` |

@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { AppProperties } from 'src/app-properties/app-properties';
+import { BoundedCache } from './bounded-cache';
 import {
   IReverseResolverCache,
   ReverseCacheEntry,
@@ -9,11 +10,15 @@ import {
 export class InMemoryReverseResolverCache implements IReverseResolverCache {
   private readonly expiry: number;
   private readonly disabled: boolean;
-  private readonly cache = new Map<string, ReverseCacheEntry>();
+  private readonly cache: BoundedCache<ReverseCacheEntry>;
 
   constructor(appProperties: AppProperties) {
     this.expiry = appProperties.reverseResolveCacheExpiry;
-    this.disabled = this.expiry === 0;
+    this.disabled =
+      this.expiry === 0 || appProperties.reverseResolveCacheMaxEntries === 0;
+    this.cache = new BoundedCache<ReverseCacheEntry>(
+      appProperties.reverseResolveCacheMaxEntries,
+    );
   }
 
   isEnabled(): boolean {

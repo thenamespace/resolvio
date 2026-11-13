@@ -4,6 +4,7 @@ import { EnsAddressRecord, EnsProfile, EnsTextRecord } from '../ens/ens.types';
 import { Address, namehash } from 'viem';
 import { ReverseResolveResult } from '../ens/dto';
 import { AppProperties } from 'src/app-properties/app-properties';
+import { BoundedCache } from 'src/ens/caches/bounded-cache';
 
 type CacheWrapper<T> = {
   data: T;
@@ -14,16 +15,31 @@ type CacheWrapper<T> = {
 export class InMemoryEnsCache implements EnsCache {
   private readonly cacheExpiration: number;
 
+  private readonly addressesCache: BoundedCache<
+    CacheWrapper<EnsAddressRecord[]>
+  >;
+  private readonly textsCache: BoundedCache<CacheWrapper<EnsTextRecord[]>>;
+  private readonly contentCache: BoundedCache<CacheWrapper<string>>;
+  private readonly profileCache: BoundedCache<CacheWrapper<EnsProfile>>;
+  private readonly primaryNameCache: BoundedCache<
+    CacheWrapper<ReverseResolveResult>
+  >;
+
   constructor(appProperties: AppProperties) {
     this.cacheExpiration = appProperties.forwardResolveCacheExpiry;
+    // v1 entries hold whole record sets (~20x a v2 single-record entry),
+    // so each v1 cache gets a proportionally smaller limit
+    const forwardMax = Math.ceil(
+      appProperties.forwardResolveCacheMaxEntries / 20,
+    );
+    this.addressesCache = new BoundedCache(forwardMax);
+    this.textsCache = new BoundedCache(forwardMax);
+    this.contentCache = new BoundedCache(forwardMax);
+    this.profileCache = new BoundedCache(forwardMax);
+    this.primaryNameCache = new BoundedCache(
+      appProperties.reverseResolveCacheMaxEntries,
+    );
   }
-
-  private addressesCache: Record<string, CacheWrapper<EnsAddressRecord[]>> = {};
-  private textsCache: Record<string, CacheWrapper<EnsTextRecord[]>> = {};
-  private contentCache: Record<string, CacheWrapper<string>> = {};
-  private profileCache: Record<string, CacheWrapper<EnsProfile>> = {};
-  private primaryNameCache: Record<string, CacheWrapper<ReverseResolveResult>> =
-    {};
 
   public getPrimaryName(
     address: Address,
@@ -36,18 +52,18 @@ export class InMemoryEnsCache implements EnsCache {
   public setPrimaryName(result: ReverseResolveResult, chain_id: number) {
     const now = new Date().getTime();
     const cacheKey = `${result.address.toLocaleLowerCase()}-${chain_id}`;
-    this.primaryNameCache[cacheKey] = {
+    this.primaryNameCache.set(cacheKey, {
       expiration: now + this.cacheExpiration,
       data: result,
-    };
+    });
   }
 
   public setProfile(name: string, profile: EnsProfile) {
     const now = new Date().getTime();
-    this.profileCache[name] = {
+    this.profileCache.set(name, {
       expiration: now + this.cacheExpiration,
       data: profile,
-    };
+    });
   }
 
   public getProfile(name: string): EnsProfile | null {
@@ -61,10 +77,10 @@ export class InMemoryEnsCache implements EnsCache {
   ) {
     const addrKey = this.addrCacheKey(name, coins);
     const now = new Date().getTime();
-    this.addressesCache[addrKey] = {
+    this.addressesCache.set(addrKey, {
       expiration: now + this.cacheExpiration,
       data: addresses,
-    };
+    });
   }
 
   public getAddresses(
@@ -78,10 +94,10 @@ export class InMemoryEnsCache implements EnsCache {
   public setTexts(name: string, texts: string[], data: EnsTextRecord[]): void {
     const key = this.textCacheKey(name, texts);
     const now = new Date().getTime();
-    this.textsCache[key] = {
+    this.textsCache.set(key, {
       expiration: now + this.cacheExpiration,
       data: data,
-    };
+    });
   }
 
   public getTexts(name: string, texts: string[]): EnsTextRecord[] | null {
@@ -95,10 +111,10 @@ export class InMemoryEnsCache implements EnsCache {
 
   public setContenthash(name: string, contenthash: string) {
     const now = new Date().getTime();
-    this.contentCache[name] = {
+    this.contentCache.set(name, {
       expiration: now + this.cacheExpiration,
       data: contenthash,
-    };
+    });
   }
 
   public clearCacheForName(name: string, types: CacheType[]) {
@@ -119,24 +135,24 @@ export class InMemoryEnsCache implements EnsCache {
 
   private clearAddressCache(name: string) {
     const hash = namehash(name);
-    for (const key of Object.keys(this.addressesCache)) {
+    for (const key of [...this.addressesCache.keys()]) {
       if (key.startsWith(hash)) {
-        delete this.addressesCache[key];
+        this.addressesCache.delete(key);
       }
     }
   }
 
   private clearTextCache(name: string) {
     const hash = namehash(name);
-    for (const key of Object.keys(this.textsCache)) {
+    for (const key of [...this.textsCache.keys()]) {
       if (key.startsWith(hash)) {
-        delete this.textsCache[key];
+        this.textsCache.delete(key);
       }
     }
   }
 
   private clearContenthashCache(name: string) {
-    delete this.contentCache[name];
+    this.contentCache.delete(name);
   }
 
   private addrCacheKey(name: string, coins: number[]): string {
@@ -162,9 +178,9 @@ export class InMemoryEnsCache implements EnsCache {
 
   private getCacheOrNull<T>(
     key: string,
-    cache: Record<string, CacheWrapper<T>>,
+    cache: BoundedCache<CacheWrapper<T>>,
   ): T | null {
-    const currentCache = cache[key];
+    const currentCache = cache.get(key);
     if (
       currentCache &&
       currentCache.data &&

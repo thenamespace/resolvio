@@ -1,4 +1,4 @@
-FROM node:20-alpine AS builder
+FROM node:20-slim AS builder
 
 WORKDIR /app
 
@@ -13,7 +13,7 @@ RUN npm run build
 
 # ---
 
-FROM node:20-alpine AS production
+FROM node:20-slim AS production
 
 WORKDIR /app
 
@@ -29,4 +29,6 @@ ENV NODE_ENV=production
 
 EXPOSE 3000
 
-CMD ["node", "dist/main"]
+# Cap V8 old-space below the container memory limit (512Mi) so the process
+# GCs hard instead of being OOM-killed or crashing in GC under load.
+CMD ["node", "--max-old-space-size=384", "dist/main"]
