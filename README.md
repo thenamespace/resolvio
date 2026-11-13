@@ -96,6 +96,7 @@ curl "https://api.resolvio.xyz/ens/v2/profile/bulk?names=vitalik.eth,artii.eth"
 # Addresses by chain name or coinType
 curl "https://api.resolvio.xyz/ens/v2/addresses/vitalik.eth?chains=eth,base,btc"
 curl "https://api.resolvio.xyz/ens/v2/addresses/vitalik.eth?coins=60,2147492101"
+curl "https://api.resolvio.xyz/ens/v2/addresses/happy.polybaskets.eth?chains=vara"  # Vara, coin type 913
 
 # Text records
 curl "https://api.resolvio.xyz/ens/v2/texts/vitalik.eth?keys=avatar,description,com.twitter"
