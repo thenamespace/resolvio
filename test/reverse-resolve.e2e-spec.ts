@@ -31,14 +31,14 @@ describe('GET /ens/v2/reverse', () => {
     });
   });
 
-  it('resolves thecap.eth address', async () => {
+  it('resolves thecap address (primary name: cap.eth)', async () => {
     const res = await request(app.getHttpServer())
       .get(`/ens/v2/reverse/${THECAP_ADDRESS}?noCache=true`)
       .expect(200);
 
     expect(res.body).toMatchObject({
       address: THECAP_ADDRESS,
-      name: 'thecap.eth',
+      name: 'cap.eth',
       hasReverseRecord: true,
     });
   });
@@ -76,7 +76,7 @@ describe('GET /ens/v2/reverse', () => {
       expect.objectContaining({ address: ARTII_ADDRESS.toLowerCase(), name: 'artii.eth', hasReverseRecord: true }),
     );
     expect(res.body.addresses).toContainEqual(
-      expect.objectContaining({ address: THECAP_ADDRESS.toLowerCase(), name: 'thecap.eth', hasReverseRecord: true }),
+      expect.objectContaining({ address: THECAP_ADDRESS.toLowerCase(), name: 'cap.eth', hasReverseRecord: true }),
     );
     expect(res.body.addresses).toContainEqual(
       expect.objectContaining({ address: NO_RECORD_ADDRESS.toLowerCase(), hasReverseRecord: false }),

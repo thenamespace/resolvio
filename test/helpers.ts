@@ -67,7 +67,7 @@ export const onchainProfile: TestEnsProfile = buildProfile({
       value: 'https://avatars.namespace.ninja/artii.eth_1750354393.png',
       exists: true,
     },
-    { key: 'email', value: 'arthy@namespace.ninja', exists: true },
+    { key: 'email', value: 'arti@namespace.ninja', exists: true },
     { key: 'com.twitter', exists: false },
     { key: 'unknown', exists: false },
   ],
@@ -116,19 +116,20 @@ export const onchainProfile: TestEnsProfile = buildProfile({
 });
 
 // ---------------------------------------------------------------------------
-// offchain name — TODO: replace name and records when available
+// test.offchaindemo.eth — official ENS CCIP-Read (offchain) test name,
+// see https://docs.ens.domains/web/ensv2-readiness/
 // ---------------------------------------------------------------------------
 
 export const offchainProfile: TestEnsProfile = buildProfile({
-  name: 'arti.offchainsub.eth',
+  name: 'test.offchaindemo.eth',
   texts: [
     { key: 'avatar', exists: false },
     { key: 'header', exists: false },
-    { key: 'name', value: 'Arti', exists: true },
-    { key: 'description', value: 'I do coding and stuff', exists: true },
-    { key: 'url', value: 'https://app.namespace.ninja', exists: true },
+    { key: 'name', exists: false },
+    { key: 'description', value: 'asdflkjasdflkjasdf', exists: true },
+    { key: 'url', exists: false },
     { key: 'location', exists: false },
-    { key: 'email', exists: false }, // stored as 'mail' in the offchain resolver
+    { key: 'email', exists: false },
     { key: 'com.twitter', exists: false },
     { key: 'com.discord', exists: false },
     { key: 'com.github', exists: false },
@@ -139,14 +140,11 @@ export const offchainProfile: TestEnsProfile = buildProfile({
     {
       coin: COIN_ETH,
       chain: 'eth',
-      value: '0x1D84ad46F1ec91b4Bb3208F645aD2fA7aBEc19f8',
+      value: '0x779981590E7Ccc0CFAe8040Ce7151324747cDb97',
       exists: true,
     },
   ],
-  contenthash: {
-    value: 'ipfs://bafybeid7gdzjx5gtm4cibfkmglflzyalyd3wknzfzxk64dxnq5jegfjgha',
-    exists: true,
-  },
+  contenthash: { exists: false },
 });
 
 // ---------------------------------------------------------------------------
