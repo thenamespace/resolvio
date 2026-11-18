@@ -8,7 +8,16 @@ import { swaggerConfig } from './docs/swagger.config';
 import { AppProperties } from './app-properties/app-properties';
 
 async function bootstrap() {
-  const app = await NestFactory.create<NestExpressApplication>(AppModule);
+  // Gate debug/verbose logging behind DEBUG_MODE. Several components log via a
+  // raw Nest Logger (e.g. the resolver caches' per-lookup "Cache hit" lines),
+  // which bypasses the DEBUG_MODE check in LoggerService; setting the Nest log
+  // levels here silences that firehose in prod, where DEBUG_MODE is unset.
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, {
+    logger:
+      process.env.DEBUG_MODE === 'true'
+        ? ['error', 'warn', 'log', 'debug', 'verbose']
+        : ['error', 'warn', 'log'],
+  });
 
   // Expect a single reverse proxy in front of the app; trust one hop so req.ip is the client IP.
   app.set('trust proxy', 1);
