@@ -6,14 +6,13 @@ import { mainnet } from 'viem/chains';
 import { Address, toCoinType } from 'viem';
 import { SUPPORTED_REVERSE_REGISTRAR_CHAINS } from './constants';
 import { AppProperties } from 'src/app-properties/app-properties';
+import { BoundedCache } from 'src/ens/caches/bounded-cache';
 
 /** @deprecated Use the v2 reverse resolution endpoint instead. */
 @Injectable()
 export class EnsReverseResolver {
   private readonly logger = new Logger(EnsReverseResolver.name);
-  private readonly cache: Map<string, { value: string; exp: number }> =
-    new Map();
-  private readonly cacheSet: Map<string, boolean> = new Map();
+  private readonly cache: BoundedCache<{ value: string; exp: number }>;
   private readonly cacheExpiry: number;
 
   constructor(
@@ -21,23 +20,17 @@ export class EnsReverseResolver {
     appProperties: AppProperties,
   ) {
     this.cacheExpiry = appProperties.reverseResolveCacheExpiry;
+    this.cache = new BoundedCache(appProperties.reverseResolveCacheMaxEntries);
   }
 
   public clearCache(address: Address[]) {
-    const addrSet: Set<Address> = new Set(address);
-    const addressesToClear: Set<Address> = new Set();
-
-    for (const addr of addrSet) {
-      const lc = addr.toLocaleLowerCase();
-      if (this.cacheSet.has(lc)) {
-        addressesToClear.add(lc as Address);
-      }
-    }
+    const addressesToClear = new Set(
+      address.map((addr) => addr.toLocaleLowerCase()),
+    );
 
     const keysToDelete: string[] = [];
-    for (const [key] of this.cache.entries()) {
-      const keyAddress = key.split('-')[0] as Address;
-      if (addressesToClear.has(keyAddress)) {
+    for (const key of this.cache.keys()) {
+      if (addressesToClear.has(key.split('-')[0])) {
         keysToDelete.push(key);
       }
     }
@@ -126,18 +119,15 @@ export class EnsReverseResolver {
     const now = new Date().getTime();
     const key = this.cacheKey(addr, coinType);
 
-    if (!this.cache.has(key)) {
+    const cachedItem = this.cache.get(key);
+    if (!cachedItem) {
       return null;
     }
 
-    const cachedItem = this.cache.get(key)!;
-
     if (cachedItem.exp > now) {
       return cachedItem.value;
-    } else {
-      this.cache.delete(key);
-      this.cacheSet.delete(addr);
     }
+    this.cache.delete(key);
     return null;
   }
 
@@ -146,7 +136,6 @@ export class EnsReverseResolver {
       value: name,
       exp: new Date().getTime() + this.cacheExpiry,
     });
-    this.cacheSet.set(addr, true);
   }
 
   private cacheKey(addr: Address, coinType: bigint) {
@@ -178,8 +167,6 @@ export class EnsReverseResolver {
 
     for (const key of keysToDelete) {
       this.cache.delete(key);
-      const addr = key.split('-')[0];
-      this.cacheSet.delete(addr);
     }
 
     if (keysToDelete.length > 0) {

@@ -4,12 +4,22 @@ import { ConfigService } from '@nestjs/config';
 // Defaults in seconds
 const DEFAULT_FORWARD_CACHE_EXPIRY_S = 5 * 60; // 5 minutes
 const DEFAULT_REVERSE_CACHE_EXPIRY_S = 30 * 60; // 30 minutes
+// Max cached entries. Forward stores one entry per record (text, coin or
+// contenthash) so a full profile takes ~30; reverse stores one per address.
+const DEFAULT_FORWARD_CACHE_MAX_ENTRIES = 100_000;
+const DEFAULT_REVERSE_CACHE_MAX_ENTRIES = 50_000;
 const DEFAULT_MAX_BULK_REVERSE_REQUEST = 20;
 const DEFAULT_MAX_BULK_PROFILE_REQUEST = 20;
 const DEFAULT_MIN_CACHE_REFRESH_INTERVAL_S = 5;
 const DEFAULT_RATE_LIMIT_PER_MINUTE = 100;
 
 const toMillis = (seconds: number) => seconds * 1000;
+
+// Negative values become 0, missing or invalid values fall back to the default
+const parseNonNegative = (raw: string | undefined, fallback: number) => {
+  const parsed = parseInt(raw ?? '');
+  return isNaN(parsed) ? fallback : Math.max(0, parsed);
+};
 
 @Injectable()
 export class AppProperties {
@@ -18,6 +28,9 @@ export class AppProperties {
   readonly isTestnet: boolean;
   readonly forwardResolveCacheExpiry: number;
   readonly reverseResolveCacheExpiry: number;
+  // Fixed cache sizes, 0 disables the cache
+  readonly forwardResolveCacheMaxEntries: number;
+  readonly reverseResolveCacheMaxEntries: number;
   readonly maxBulkReverseRequest: number;
   readonly maxBulkProfileRequest: number;
   // Minimum time between cache refreshes (noCache / cache clear) for the same entry
@@ -45,6 +58,15 @@ export class AppProperties {
     const revSeconds =
       revRaw === '' ? DEFAULT_REVERSE_CACHE_EXPIRY_S : parseInt(revRaw);
     this.reverseResolveCacheExpiry = toMillis(revSeconds);
+
+    this.forwardResolveCacheMaxEntries = parseNonNegative(
+      config.get<string>('FORWARD_RESOLVE_CACHE_MAX_ENTRIES'),
+      DEFAULT_FORWARD_CACHE_MAX_ENTRIES,
+    );
+    this.reverseResolveCacheMaxEntries = parseNonNegative(
+      config.get<string>('REVERSE_RESOLVE_CACHE_MAX_ENTRIES'),
+      DEFAULT_REVERSE_CACHE_MAX_ENTRIES,
+    );
 
     const bulkRaw = config.get<string>('MAX_BULK_REVERSE_REQUEST') ?? '';
     this.maxBulkReverseRequest =

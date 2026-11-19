@@ -1,10 +1,16 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { AppProperties } from 'src/app-properties/app-properties';
 import { EnsAddressRecord, EnsTextRecord } from '../ens.types';
-import {
-  CacheEntry,
-  IForwardResolverCache,
-} from './forward-resolver.cache';
+import { BoundedCache } from './bounded-cache';
+import { CacheEntry, IForwardResolverCache } from './forward-resolver.cache';
+
+type RecordKind = 'text' | 'addr' | 'hash';
+
+type StoredEntry = {
+  name: string;
+  kind: RecordKind;
+  entry: CacheEntry<unknown>;
+};
 
 @Injectable()
 export class InMemoryForwardResolverCache implements IForwardResolverCache {
@@ -12,19 +18,20 @@ export class InMemoryForwardResolverCache implements IForwardResolverCache {
   private readonly expiry: number;
   private readonly disabled: boolean;
 
-  private readonly textCache = new Map<string, CacheEntry<EnsTextRecord>>();
-  private readonly addressCache = new Map<
-    string,
-    CacheEntry<EnsAddressRecord>
-  >();
-  private readonly contenthashCache = new Map<string, CacheEntry<string>>();
+  // Texts, addresses and contenthashes share one fixed-size store
+  private readonly cache: BoundedCache<StoredEntry>;
 
-  // Tracks all cache keys per name across all caches for O(1) bulk deletes
+  // Tracks all cache keys per name for O(1) bulk deletes
   private readonly nameIndex = new Map<string, Set<string>>();
 
   constructor(appProperties: AppProperties) {
     this.expiry = appProperties.forwardResolveCacheExpiry;
-    this.disabled = this.expiry === 0;
+    this.disabled =
+      this.expiry === 0 || appProperties.forwardResolveCacheMaxEntries === 0;
+    this.cache = new BoundedCache<StoredEntry>(
+      appProperties.forwardResolveCacheMaxEntries,
+      (key, stored) => this.untrackKey(stored.name, key),
+    );
   }
 
   isEnabled(): boolean {
@@ -35,7 +42,7 @@ export class InMemoryForwardResolverCache implements IForwardResolverCache {
 
   getText(name: string, key: string): CacheEntry<EnsTextRecord> | null {
     if (this.disabled) return null;
-    const entry = this.getOrNull(this.textKey(name, key), this.textCache);
+    const entry = this.getOrNull<EnsTextRecord>(this.textKey(name, key));
     if (entry?.isEmpty) {
       this.logger.debug(`Cache hit (empty) text ${name}/${key}`);
     }
@@ -43,29 +50,18 @@ export class InMemoryForwardResolverCache implements IForwardResolverCache {
   }
 
   setText(name: string, key: string, data: EnsTextRecord | null): void {
-    if (this.disabled) return;
-    const cacheKey = this.textKey(name, key);
-    this.textCache.set(cacheKey, {
-      data,
-      isEmpty: data === null,
-      cachedAt: Date.now(),
-      expiresAt: Date.now() + this.expiry,
-    });
-    this.trackKey(name, cacheKey);
+    this.setEntry(name, 'text', this.textKey(name, key), data);
   }
 
   deleteText(name: string): void {
-    this.deleteFromCache(name, this.textCache);
+    this.deleteKind(name, 'text');
   }
 
   // --- Addresses ---
 
   getAddress(name: string, coin: number): CacheEntry<EnsAddressRecord> | null {
     if (this.disabled) return null;
-    const entry = this.getOrNull(
-      this.addressKey(name, coin),
-      this.addressCache,
-    );
+    const entry = this.getOrNull<EnsAddressRecord>(this.addressKey(name, coin));
     if (entry?.isEmpty) {
       this.logger.debug(`Cache hit (empty) address ${name}/${coin}`);
     }
@@ -73,29 +69,18 @@ export class InMemoryForwardResolverCache implements IForwardResolverCache {
   }
 
   setAddress(name: string, coin: number, data: EnsAddressRecord | null): void {
-    if (this.disabled) return;
-    const cacheKey = this.addressKey(name, coin);
-    this.addressCache.set(cacheKey, {
-      data,
-      isEmpty: data === null,
-      cachedAt: Date.now(),
-      expiresAt: Date.now() + this.expiry,
-    });
-    this.trackKey(name, cacheKey);
+    this.setEntry(name, 'addr', this.addressKey(name, coin), data);
   }
 
   deleteAddress(name: string): void {
-    this.deleteFromCache(name, this.addressCache);
+    this.deleteKind(name, 'addr');
   }
 
   // --- Contenthash ---
 
   getContenthash(name: string): CacheEntry<string> | null {
     if (this.disabled) return null;
-    const entry = this.getOrNull(
-      this.contenthashKey(name),
-      this.contenthashCache,
-    );
+    const entry = this.getOrNull<string>(this.contenthashKey(name));
     if (entry?.isEmpty) {
       this.logger.debug(`Cache hit (empty) contenthash ${name}`);
     }
@@ -103,57 +88,68 @@ export class InMemoryForwardResolverCache implements IForwardResolverCache {
   }
 
   setContenthash(name: string, value: string | null): void {
-    if (this.disabled) return;
-    const cacheKey = this.contenthashKey(name);
-    this.contenthashCache.set(cacheKey, {
-      data: value,
-      isEmpty: value === null,
-      cachedAt: Date.now(),
-      expiresAt: Date.now() + this.expiry,
-    });
-    this.trackKey(name, cacheKey);
+    this.setEntry(name, 'hash', this.contenthashKey(name), value);
   }
 
   deleteContenthash(name: string): void {
-    this.deleteFromCache(name, this.contenthashCache);
+    this.deleteKind(name, 'hash');
   }
 
-  // --- Delete all entries for a name across all caches ---
+  // --- Delete all entries for a name ---
 
   deleteAll(name: string): void {
     const keys = this.nameIndex.get(name);
     if (!keys) return;
     for (const key of keys) {
-      this.textCache.delete(key);
-      this.addressCache.delete(key);
-      this.contenthashCache.delete(key);
+      this.cache.delete(key);
     }
     this.nameIndex.delete(name);
   }
 
   // --- Internals ---
 
-  private getOrNull<T>(
-    key: string,
-    cache: Map<string, CacheEntry<T>>,
-  ): CacheEntry<T> | null {
-    const entry = cache.get(key);
-    if (!entry) return null;
-    if (Date.now() > entry.expiresAt) {
-      cache.delete(key);
+  private getOrNull<T>(key: string): CacheEntry<T> | null {
+    const stored = this.cache.get(key);
+    if (!stored) return null;
+    if (Date.now() > stored.entry.expiresAt) {
+      this.cache.delete(key);
+      this.untrackKey(stored.name, key);
       return null;
     }
-    return entry;
+    return stored.entry as CacheEntry<T>;
   }
 
-  private deleteFromCache<T>(
+  private setEntry<T>(
     name: string,
-    cache: Map<string, CacheEntry<T>>,
+    kind: RecordKind,
+    key: string,
+    data: T | null,
   ): void {
+    if (this.disabled) return;
+    const now = Date.now();
+    // Track before inserting so an eviction triggered by this insert
+    // never leaves the index pointing at a missing key
+    this.trackKey(name, key);
+    this.cache.set(key, {
+      name,
+      kind,
+      entry: {
+        data,
+        isEmpty: data === null,
+        cachedAt: now,
+        expiresAt: now + this.expiry,
+      },
+    });
+  }
+
+  private deleteKind(name: string, kind: RecordKind): void {
     const keys = this.nameIndex.get(name);
     if (!keys) return;
-    for (const key of keys) {
-      cache.delete(key);
+    for (const key of [...keys]) {
+      if (this.cache.peek(key)?.kind === kind) {
+        this.cache.delete(key);
+        this.untrackKey(name, key);
+      }
     }
   }
 
@@ -164,6 +160,13 @@ export class InMemoryForwardResolverCache implements IForwardResolverCache {
       this.nameIndex.set(name, keys);
     }
     keys.add(cacheKey);
+  }
+
+  private untrackKey(name: string, cacheKey: string): void {
+    const keys = this.nameIndex.get(name);
+    if (!keys) return;
+    keys.delete(cacheKey);
+    if (keys.size === 0) this.nameIndex.delete(name);
   }
 
   private textKey(name: string, key: string): string {
