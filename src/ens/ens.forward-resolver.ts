@@ -1,7 +1,11 @@
 import { BadRequestException, Inject, Injectable } from '@nestjs/common';
 import { AppProperties } from 'src/app-properties/app-properties';
 import { EthClients } from 'src/web3/eth.clients';
-import { chainNameForCoin, coinTypeForChain } from './supported-chains';
+import {
+  chainNameForCoin,
+  coinTypeForChain,
+  isSupportedCoinType,
+} from './supported-chains';
 import { FORWARD_RESOLVER_CACHE } from './caches/forward-resolver.cache';
 import type {
   CacheEntry,
@@ -27,6 +31,13 @@ import {
 import { ContextLogger, LoggerService } from 'src/logger/logger.service';
 
 const ETH_COIN_TYPE = 60;
+
+// Unknown coin types otherwise throw inside ensjs and surface as a 500
+function assertSupportedCoinType(coin: number): void {
+  if (!isSupportedCoinType(coin)) {
+    throw new BadRequestException(`Unsupported coin type: ${coin}`);
+  }
+}
 
 @Injectable()
 export class EnsForwardResolver {
@@ -120,6 +131,7 @@ export class EnsForwardResolver {
       requestedCoins = resolved;
     } else {
       requestedCoins = request.coins?.length ? request.coins : [ETH_COIN_TYPE];
+      requestedCoins.forEach(assertSupportedCoinType);
     }
 
     const noCache = request.noCache ?? false;
@@ -219,7 +231,10 @@ export class EnsForwardResolver {
     // Each address input is either a coin type number ("60") or a chain name ("eth").
     const requestedCoins: number[] = addressInputs.map((input) => {
       const asNum = Number(input);
-      if (!isNaN(asNum) && input.trim() !== '') return asNum;
+      if (!isNaN(asNum) && input.trim() !== '') {
+        assertSupportedCoinType(asNum);
+        return asNum;
+      }
       const coin = coinTypeForChain(input);
       if (coin === null)
         throw new BadRequestException(`Unsupported chain: ${input}`);

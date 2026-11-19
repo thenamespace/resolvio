@@ -99,6 +99,25 @@ describe('GET /ens/v2/addresses/:name', () => {
     );
   });
 
+  // --- vara (coin type 913, SS58 prefix 137) ---
+
+  it('resolves a vara address by chain name and coin type', async () => {
+    const vara = {
+      coin: 913,
+      chain: 'vara',
+      value: 'kGkP3DQEEppWt6nSBjXKrknptM4TEcG5ADGjYqUxE8rg8dvDF',
+      exists: true,
+    };
+
+    for (const query of ['chains=vara', 'coins=913']) {
+      const res = await request(app.getHttpServer())
+        .get(`/ens/v2/addresses/happy.polybaskets.eth?${query}&noCache=true`)
+        .expect(200);
+
+      expect(res.body.addresses).toContainEqual(vara);
+    }
+  });
+
   // --- parameter behaviour ---
 
   it('returns exists:false for a coin with no record', async () => {
@@ -113,6 +132,24 @@ describe('GET /ens/v2/addresses/:name', () => {
     await request(app.getHttpServer())
       .get(`/ens/v2/addresses/${onchainProfile.name}?chains=notachain`)
       .expect(400);
+  });
+
+  it('returns 400 for unsupported coin type', async () => {
+    const res = await request(app.getHttpServer())
+      .get(`/ens/v2/addresses/${onchainProfile.name}?coins=999999`)
+      .expect(400);
+
+    expect(res.body).toMatchObject({
+      message: 'Unsupported coin type: 999999',
+    });
+  });
+
+  it('returns 400 for fractional or negative coin types', async () => {
+    for (const coin of ['2147483648.5', '-60']) {
+      await request(app.getHttpServer())
+        .get(`/ens/v2/addresses/${onchainProfile.name}?coins=${coin}`)
+        .expect(400);
+    }
   });
 
   it('returns 400 when name is too short', async () => {

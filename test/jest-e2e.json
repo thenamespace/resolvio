@@ -7,10 +7,11 @@
     "^.+\\.(t|j)s$": ["ts-jest", { "tsconfig": "tsconfig.json" }]
   },
   "moduleNameMapper": {
-    "^src/(.*)$": "<rootDir>/../src/$1"
+    "^src/(.*)$": "<rootDir>/../src/$1",
+    "^cborg$": "<rootDir>/../node_modules/cborg/cborg.js"
   },
   "transformIgnorePatterns": [
-    "/node_modules/(?!(@ensdomains|viem|abitype|isows|webauthn-p256|graphql-request)/)"
+    "/node_modules/(?!(@ensdomains|viem|abitype|isows|webauthn-p256|graphql-request|cborg)/)"
   ],
   "testTimeout": 30000
 }
